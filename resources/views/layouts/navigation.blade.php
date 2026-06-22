@@ -5,13 +5,21 @@
                 <div class="shrink-0 flex items-center">
                     <a href="{{ url('/') }}">
                         @php
-                            $config = session('sistema_configuracoes');
+                            $path = storage_path('app/settings.json');
+                            $config = file_exists($path) ? json_decode(file_get_contents($path), true) : null;
                             $logoPath = $config['logo'] ?? null;
                         @endphp
                         
-                        <img src="{{ $logoPath ? asset('storage/'.$logoPath) : asset('img/gamesnest.jpg') }}" 
-                             alt="Logo" 
-                             style="width: 160px; height: 50px; object-fit: contain;" />
+                        {{-- A imagem agora é servida via rota, ignorando o cache do navegador com o parâmetro de tempo --}}
+                        @if($logoPath)
+                            <img src="{{ url('/storage/' . $logoPath) . '?v=' . time() }}" 
+                                 alt="Logo da Loja" 
+                                 style="width: 160px; height: 50px; object-fit: contain;" />
+                        @else
+                            <img src="{{ asset('img/gamesnest.jpg') }}" 
+                                 alt="Game Nest" 
+                                 style="width: 160px; height: 50px; object-fit: contain;" />
+                        @endif
                     </a>
                 </div>
 

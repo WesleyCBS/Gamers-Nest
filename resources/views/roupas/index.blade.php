@@ -15,17 +15,14 @@
             <p class="text-center mb-8 text-gray-500 font-medium tracking-tight">Faça login para salvar seus favoritos!</p>
         @endauth
 
-        {{-- BARRA DE PESQUISA DINÂMICA --}}
         <div class="max-w-md mx-auto mb-10 px-7">
             <form action="{{ url()->current() }}" method="GET" class="relative group">
                 <input type="text" name="search" value="{{ request('search') }}"
                     placeholder="{{ isset($categoriaAtiva) ? 'Buscar em ' . $categoriaAtiva->nome . '...' : 'O que você está procurando?' }}" 
                     class="w-full pl-12 pr-10 py-3 rounded-2xl border-none shadow-md focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-gray-400 font-medium text-gray-700">
-                
                 <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
                     <i class="fas fa-search text-lg"></i>
                 </div>
-
                 @if(request('search'))
                     <a href="{{ url()->current() }}" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
                         <i class="fas fa-times-circle"></i>
@@ -34,7 +31,6 @@
             </form>
         </div>
 
-        {{-- FILTROS DE CATEGORIA --}}
         <div class="max-w-7xl mx-auto px-7 mb-10">
             <div class="flex flex-wrap justify-center gap-3">
                 <a href="{{ route('roupas.index') }}" 
@@ -55,9 +51,9 @@
                                     <a href="{{ route('categorias.edit', $cat->id) }}" class="p-2 text-blue-500 hover:text-blue-700 transition-colors" title="Editar">
                                         <i class="fas fa-edit text-[10px]"></i>
                                     </a>
-                                    <form action="{{ route('categorias.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Excluir?')">
+                                    <form id="del-cat-{{ $cat->id }}" action="{{ route('categorias.destroy', $cat->id) }}" method="POST">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="p-2 text-red-500 hover:text-red-700">
+                                        <button type="button" onclick="confirmarExclusao('del-cat-{{ $cat->id }}')" class="p-2 text-red-500 hover:text-red-700">
                                             <i class="fas fa-trash text-[10px]"></i>
                                         </button>
                                     </form>
@@ -69,34 +65,26 @@
             </div>
         </div>
 
-        {{-- LISTAGEM DE PRODUTOS --}}
         <div class="flex flex-wrap justify-center gap-8 px-7">
             @forelse ($roupas as $roupa)
                 <div class="bg-white shadow-xl rounded-3xl overflow-hidden w-64 flex flex-col h-[450px] transition-transform hover:scale-105 border border-gray-100 relative group">
                     <a href="{{ route('roupas.show', $roupa->id) }}" class="absolute inset-0 z-10" title="Ver {{ $roupa->nome }}"></a>
-
                     <div class="h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
-                        @php
-                            // Garante que pega apenas o nome do arquivo, ex: "foto.jpg"
-                            $nomeArquivo = basename($roupa->imagem);
-                        @endphp
-                        {{--Chama a nossa rota personalizada--}}
-                        <img src="/storage/products/{{ $nomeArquivo }}" alt="{{ $roupa->nome }}" class="w-full h-full object-cover">
+                        <img src="/storage/products/{{ basename($roupa->imagem) }}" alt="{{ $roupa->nome }}" class="w-full h-full object-cover">
                     </div>
 
                     <div class="flex flex-col p-5 flex-grow">
                         <div class="flex justify-between items-start mb-2">
                             <h2 class="text-lg font-bold text-gray-800 leading-tight">{{ $roupa->nome }}</h2>
-                            
                             @auth
                                 @if(strtolower(Auth::user()->role) === 'admin')
                                     <div class="relative z-20 flex gap-2">
                                         <a href="{{ route('roupas.edit', $roupa->id) }}" class="text-blue-500 hover:text-blue-700">
                                             <i class="fas fa-edit text-sm"></i>
                                         </a>
-                                        <form action="{{ route('roupas.destroy', $roupa->id) }}" method="POST" onsubmit="return confirm('Excluir item?')">
+                                        <form id="del-roupa-{{ $roupa->id }}" action="{{ route('roupas.destroy', $roupa->id) }}" method="POST">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="text-red-500 hover:text-red-700">
+                                            <button type="button" onclick="confirmarExclusao('del-roupa-{{ $roupa->id }}')" class="text-red-500 hover:text-red-700">
                                                 <i class="fas fa-trash-alt text-sm"></i>
                                             </button>
                                         </form>
@@ -104,7 +92,6 @@
                                 @endif
                             @endauth
                         </div>
-
                         <p class="text-gray-500 text-sm line-clamp-2 mb-2">{{ $roupa->descrição }}</p>
                         <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-auto">Estoque: {{ $roupa->quantidade }}</p>
                     </div>
@@ -114,22 +101,19 @@
                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Preço</span>
                             <span class="text-xl font-black text-indigo-600 leading-none">R$ {{ number_format($roupa->preço, 2, ',', '.') }}</span>
                         </div>
-
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-4">
                             @auth
-                                <form action="{{ route('roupas.favorito', $roupa->id) }}" method="POST" class="flex items-center">
+                                <form action="{{ route('roupas.favorito', $roupa->id) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="hover:scale-125 transition-transform duration-200">
                                         <i class="{{ Auth::user()->favoritos->contains($roupa->id) ? 'fas' : 'far' }} fa-heart text-red-500 text-xl"></i>
                                     </button>
                                 </form>
                             @else
-                                <a href="{{ route('login') }}" class="text-gray-300 hover:text-red-500 transition-colors">
-                                    <i class="far fa-heart text-xl"></i>
+                                <a href="{{ route('login') }}" class="hover:scale-125 transition-transform duration-200">
+                                    <i class="far fa-heart text-red-500 text-xl"></i>
                                 </a>
                             @endauth
-
-                            {{-- TRAVA DE LOGIN NO CARRINHO --}}
                             @auth
                                 <form action="{{ route('carrinho.adicionar', $roupa->id) }}" method="POST">
                                     @csrf
@@ -157,4 +141,23 @@
             {{ $roupas->appends(['search' => request('search')])->links() }}
         </div>
     </div>
+
+    <script>
+        function confirmarExclusao(formId) {
+            Swal.fire({
+                title: 'Tem certeza?',
+                text: "Tem certeza que deseja excluir?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Sim',
+                cancelButtonText: 'Não'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            })
+        }
+    </script>
 @endsection

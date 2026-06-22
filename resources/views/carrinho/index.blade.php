@@ -29,13 +29,10 @@
                         @php 
                             $subtotal = $detalhes['preço'] * $detalhes['quantidade'];
                             $total += $subtotal;
-                            
-                            // Limpeza do caminho da imagem para evitar fotos quebradas
                             $imagemLimpa = str_replace('storage/', '', $detalhes['imagem']);
                         @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-6 py-6 flex items-center gap-4">
-                                {{-- A função Storage::url já adiciona /storage/, por isso limpamos a variável antes --}}
                                 <img src="{{ Storage::url($imagemLimpa) }}" class="w-16 h-16 rounded-xl object-cover shadow-sm" alt="{{ $detalhes['nome'] }}">
                                 <span class="font-bold text-gray-800 text-lg">{{ $detalhes['nome'] }}</span>
                             </td>
@@ -69,9 +66,10 @@
                         R$ {{ number_format($total, 2, ',', '.') }}
                     </span>
                 </div>
-                <button class="w-full md:w-auto bg-green-500 text-white px-12 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-green-600 hover:scale-105 transition-all shadow-lg shadow-green-200">
+                <a href="{{ route('checkout.index') }}" 
+                   class="w-full md:w-auto bg-green-500 text-white px-12 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-green-600 hover:scale-105 transition-all shadow-lg shadow-green-200 text-center">
                     Finalizar Pedido <i class="fas fa-check ml-2"></i>
-                </button>
+                </a>
             </div>
         </div>
     @else
@@ -80,11 +78,11 @@
                 <i class="fas fa-shopping-basket text-4xl text-gray-300"></i>
             </div>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Seu carrinho está vazio</h2>
-            <p class="text-gray-500 mb-8">Parece que você ainda não escolheu seus consoles favoritos.</p>
+            <p class="text-gray-500 mb-8">Parece que você ainda não escolheu seus itens.</p>
             <a href="{{ route('roupas.index') }}" class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all">
-                Ver Catálogo de Produtos
+                Ver Catálogo
             </a>
         </div>
     @endif
 </div>
-@endsection 
+@endsection

@@ -8,13 +8,11 @@ use Illuminate\Support\Facades\Storage;
 
 class CheckoutController extends Controller
 {
-    // Caminho do arquivo de configurações permanentes
     private function getSettingsPath() 
     {
         return storage_path('app/settings.json');
     }
 
-    // Lê as configurações do arquivo JSON ou retorna padrão
     private function getSettings() 
     {
         if (!file_exists($this->getSettingsPath())) {
@@ -28,7 +26,15 @@ class CheckoutController extends Controller
         return json_decode(file_get_contents($this->getSettingsPath()), true);
     }
 
-    // --- GERENCIAMENTO DE CONFIGURAÇÕES (ADMIN) ---
+    public function index()
+    {
+        if (!session()->has('carrinho') || count(session('carrinho')) == 0) {
+            return redirect()->route('carrinho.index')->with('error', 'Seu carrinho está vazio.');
+        }
+
+        return redirect()->route('checkout.endereco');
+    }
+
     public function configuracoesForm()
     {
         $config = $this->getSettings();
@@ -40,9 +46,12 @@ class CheckoutController extends Controller
         $config = $this->getSettings();
 
         if ($request->hasFile('logo')) {
+            $request->validate(['logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048']);
+
             if (!empty($config['logo']) && Storage::disk('public')->exists($config['logo'])) {
                 Storage::disk('public')->delete($config['logo']);
             }
+            
             $config['logo'] = $request->file('logo')->store('config', 'public');
         }
 
@@ -50,13 +59,10 @@ class CheckoutController extends Controller
         $config['pagamento_credito'] = $request->has('pagamento_credito');
         $config['pagamento_debito'] = $request->has('pagamento_debito');
 
-        // Salva permanentemente no arquivo
-        file_put_contents($this->getSettingsPath(), json_encode($config));
+        file_put_contents($this->getSettingsPath(), json_encode($config, JSON_PRETTY_PRINT));
 
-        return redirect()->back()->with('success', 'Configurações salvas permanentemente!');
+        return redirect()->back()->with('success', 'Configurações salvas com sucesso!');
     }
-
-    // --- FLUXO DE COMPRA (CLIENTE) ---
 
     public function iniciar(Request $request, $id)
     {
@@ -67,8 +73,10 @@ class CheckoutController extends Controller
 
     public function enderecoForm()
     {
-        if (!session()->has('checkout_produto_id')) return redirect()->route('roupas.index');
-        $roupa = Roupa::findOrFail(session('checkout_produto_id'));
+        $roupa = null;
+        if (session()->has('checkout_produto_id')) {
+            $roupa = Roupa::find(session('checkout_produto_id'));
+        }
         return view('roupas.endereco', compact('roupa'));
     }
 
@@ -87,23 +95,20 @@ class CheckoutController extends Controller
 
     public function pagamentoForm()
     {
-        if (!session()->has('checkout_produto_id') || !session()->has('checkout_endereco')) {
+        if (!session()->has('checkout_endereco')) {
             return redirect()->route('checkout.endereco');
         }
         
-        $roupa = Roupa::findOrFail(session('checkout_produto_id'));
         $endereco = session('checkout_endereco');
-        
-        // Lê do arquivo JSON permanente
         $config = $this->getSettings();
 
-        return view('roupas.pagamento', compact('roupa', 'endereco', 'config'));
+        return view('roupas.pagamento', compact('endereco', 'config'));
     }
 
     public function finalizarCompra(Request $request)
     {
         $request->validate(['metodo_pagamento' => 'required|string']);
-        session()->forget(['checkout_produto_id', 'checkout_endereco']);
+        session()->forget(['checkout_produto_id', 'checkout_endereco', 'carrinho']);
         return response()->json(['success' => true]);
     }
 }
