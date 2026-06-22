@@ -10,7 +10,6 @@
                             $logoPath = $config['logo'] ?? null;
                         @endphp
                         
-                        {{-- A imagem agora é servida via rota, ignorando o cache do navegador com o parâmetro de tempo --}}
                         @if($logoPath)
                             <img src="{{ url('/storage/' . $logoPath) . '?v=' . time() }}" 
                                  alt="Logo da Loja" 
@@ -28,8 +27,21 @@
                         <i class="fas fa-gamepad text-lg"></i> <span>Catálogo</span>
                     </x-nav-link>
                     
+                    {{-- Carrinho com contador animado --}}
                     <x-nav-link href="{{ route('carrinho.index') }}" :active="request()->routeIs('carrinho.index')" class="font-bold !text-gray-900 !border-none">
-                        <i class="fas fa-shopping-cart text-indigo-600 text-lg"></i> <span>Meu Carrinho</span>
+                        <div class="flex items-center relative">
+                            <i class="fas fa-shopping-cart text-indigo-600 text-lg"></i>
+                            
+                            @php $count = session()->has('carrinho') ? count(session('carrinho')) : 0; @endphp
+                            
+                            @if($count > 0)
+                                <span class="ml-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-bounce">
+                                    {{ $count }}
+                                </span>
+                            @endif
+                            
+                            <span class="ml-2">Meu Carrinho</span>
+                        </div>
                     </x-nav-link>
                     
                     @auth

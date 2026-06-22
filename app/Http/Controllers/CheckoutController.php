@@ -8,22 +8,36 @@ use Illuminate\Support\Facades\Storage;
 
 class CheckoutController extends Controller
 {
-    private function getSettingsPath() 
-    {
-        return storage_path('app/settings.json');
-    }
+    private function getSettingsPath() { return storage_path('app/settings.json'); }
 
     private function getSettings() 
     {
         if (!file_exists($this->getSettingsPath())) {
-            return [
-                'logo' => null, 
-                'pagamento_pix' => true, 
-                'pagamento_credito' => true, 
-                'pagamento_debito' => true
-            ];
+            return ['logo' => null, 'pagamento_pix' => true, 'pagamento_credito' => true, 'pagamento_debito' => true];
         }
         return json_decode(file_get_contents($this->getSettingsPath()), true);
+    }
+
+    // MANTIDO: O método que estava dando erro foi recriado aqui
+    public function iniciar(Request $request, $id)
+    {
+        $produto = Roupa::findOrFail($id);
+        $carrinho = session()->get('carrinho', []);
+
+        // Adiciona ao carrinho (mantendo a lógica de quantidade)
+        if(isset($carrinho[$id])) {
+            $carrinho[$id]['quantidade']++;
+        } else {
+            $carrinho[$id] = [
+                "nome" => $produto->nome,
+                "quantidade" => 1,
+                "preço" => $produto->preço,
+                "imagem" => $produto->imagem
+            ];
+        }
+
+        session()->put('carrinho', $carrinho);
+        return redirect()->route('checkout.endereco');
     }
 
     public function index()
@@ -31,7 +45,6 @@ class CheckoutController extends Controller
         if (!session()->has('carrinho') || count(session('carrinho')) == 0) {
             return redirect()->route('carrinho.index')->with('error', 'Seu carrinho está vazio.');
         }
-
         return redirect()->route('checkout.endereco');
     }
 
@@ -44,40 +57,23 @@ class CheckoutController extends Controller
     public function salvarConfiguracoes(Request $request)
     {
         $config = $this->getSettings();
-
         if ($request->hasFile('logo')) {
             $request->validate(['logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048']);
-
             if (!empty($config['logo']) && Storage::disk('public')->exists($config['logo'])) {
                 Storage::disk('public')->delete($config['logo']);
             }
-            
             $config['logo'] = $request->file('logo')->store('config', 'public');
         }
-
         $config['pagamento_pix'] = $request->has('pagamento_pix');
         $config['pagamento_credito'] = $request->has('pagamento_credito');
         $config['pagamento_debito'] = $request->has('pagamento_debito');
-
         file_put_contents($this->getSettingsPath(), json_encode($config, JSON_PRETTY_PRINT));
-
         return redirect()->back()->with('success', 'Configurações salvas com sucesso!');
-    }
-
-    public function iniciar(Request $request, $id)
-    {
-        $roupa = Roupa::findOrFail($id);
-        session(['checkout_produto_id' => $roupa->id]);
-        return redirect()->route('checkout.endereco');
     }
 
     public function enderecoForm()
     {
-        $roupa = null;
-        if (session()->has('checkout_produto_id')) {
-            $roupa = Roupa::find(session('checkout_produto_id'));
-        }
-        return view('roupas.endereco', compact('roupa'));
+        return view('roupas.endereco');
     }
 
     public function salvarEndereco(Request $request)
@@ -101,14 +97,15 @@ class CheckoutController extends Controller
         
         $endereco = session('checkout_endereco');
         $config = $this->getSettings();
+        $carrinho = session('carrinho', []);
 
-        return view('roupas.pagamento', compact('endereco', 'config'));
+        return view('roupas.pagamento', compact('endereco', 'config', 'carrinho'));
     }
 
     public function finalizarCompra(Request $request)
     {
         $request->validate(['metodo_pagamento' => 'required|string']);
-        session()->forget(['checkout_produto_id', 'checkout_endereco', 'carrinho']);
+        session()->forget(['checkout_endereco', 'carrinho']);
         return response()->json(['success' => true]);
     }
 }
