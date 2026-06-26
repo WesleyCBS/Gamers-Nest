@@ -17,13 +17,11 @@ class CategoriaController extends Controller
     {
         $request->validate([
             'nome' => 'required|string|max:255|unique:categorias,nome',
-            // Removi a validação do ícone aqui pois ele não vem do formulário
         ]);
 
         Categoria::create([
             'nome' => $request->nome,
             'slug' => Str::slug($request->nome),
-            // Aqui está a solução: se o icone for nulo, ele salva 'fas fa-tag'
             'icone' => $request->icone ?? 'fas fa-tag',
         ]);
 
@@ -42,11 +40,10 @@ class CategoriaController extends Controller
         
         $request->validate([
             'nome' => 'required|string|max:255|unique:categorias,nome,' . $id,
-            'icone' => 'nullable|string|max:255', // Deixei nullable para não dar erro se não enviar
+            'icone' => 'nullable|string|max:255',
         ]);
 
         $categoria->nome = $request->nome;
-        // No update, se não enviar ícone, mantemos o que já estava ou usamos o padrão
         $categoria->icone = $request->icone ?? $categoria->icone ?? 'fas fa-tag';
         $categoria->slug = Str::slug($request->nome);
         
@@ -58,8 +55,6 @@ class CategoriaController extends Controller
     public function destroy($id)
     {
         $categoria = Categoria::findOrFail($id);
-        
-        // Remove os produtos vinculados para evitar erro de chave estrangeira
         $categoria->roupas()->delete(); 
         $categoria->delete();
 

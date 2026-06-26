@@ -18,7 +18,7 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-4 sm:pt-0 bg-white-100 dark:bg-white-900">
             <div>
                 <a href="/">
-                    <img src="{{ asset('img/gamesnest.jpg') }}" alt="" style="width: 250px; height: 80px;"/> 
+                    <img src="{{ asset('img/gamersnestnovo.png') }}" alt="" style="width: 250px; height: 80px;"/> 
                 </a>
             </div>
 

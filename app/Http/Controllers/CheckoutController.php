@@ -18,13 +18,11 @@ class CheckoutController extends Controller
         return json_decode(file_get_contents($this->getSettingsPath()), true);
     }
 
-    // MANTIDO: O método que estava dando erro foi recriado aqui
     public function iniciar(Request $request, $id)
     {
         $produto = Roupa::findOrFail($id);
         $carrinho = session()->get('carrinho', []);
 
-        // Adiciona ao carrinho (mantendo a lógica de quantidade)
         if(isset($carrinho[$id])) {
             $carrinho[$id]['quantidade']++;
         } else {

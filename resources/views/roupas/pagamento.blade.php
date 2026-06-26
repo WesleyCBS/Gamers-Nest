@@ -39,14 +39,14 @@
                             </label>
                         @endif
 
-                        {{-- DÉBITO --}}
+                        {{-- BOLETO --}}
                         @if(($config['pagamento_debito'] ?? true) == true)
                             <label class="flex items-center gap-4 p-4 bg-white border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-indigo-500 transition-all">
                                 <input type="radio" name="metodo_pagamento" value="debito" class="text-indigo-600 focus:ring-indigo-500 w-5 h-5 border-gray-300">
                                 <div class="text-orange-500 text-xl bg-orange-50 w-10 h-10 rounded-xl flex items-center justify-center">
                                     <i class="fas fa-money-check"></i>
                                 </div>
-                                <div><span class="block font-bold text-gray-800 text-sm">Cartão de Débito</span></div>
+                                <div><span class="block font-bold text-gray-800 text-sm">Boleto</span></div>
                             </label>
                         @endif
                     </div>

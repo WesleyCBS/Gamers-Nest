@@ -47,7 +47,7 @@
                         <input type="checkbox" name="pagamento_debito" value="1" 
                             {{ (isset($configuracoes->pagamento_debito) && $configuracoes->pagamento_debito) ? 'checked' : '' }} 
                             class="w-5 h-5 text-indigo-600 rounded">
-                        <span class="font-bold text-sm text-gray-700">Débito</span>
+                        <span class="font-bold text-sm text-gray-700">Boleto</span>
                     </label>
 
                 </div>

@@ -1,1 +1,1 @@
-<img src="{{ asset('img/Anchor.png') }}" alt="">
+<img src="{{ asset('gamersnestnovo.png') }}" alt="Logo">

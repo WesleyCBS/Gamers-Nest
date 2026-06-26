@@ -10,12 +10,10 @@ use Illuminate\Support\Facades\Storage;
 
 class RoupaController extends Controller
 {
-    // 1. LISTAR TUDO (Busca global em todos os itens)
     public function index(Request $request)
     {
         $query = Roupa::with('categoria');
 
-        // Lógica de busca global
         if ($request->has('search') && $request->search != '') {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -29,15 +27,12 @@ class RoupaController extends Controller
         return view('roupas.index', compact('roupas', 'categorias'));
     }
 
-    // 2. FILTRAR POR CONSOLE (Busca restrita à categoria selecionada)
     public function porCategoria(Request $request, $slug)
     {
         $categoriaAtiva = Categoria::where('slug', $slug)->firstOrFail();
         
-        // Inicia a query filtrando pela categoria da aba
         $query = Roupa::where('categoria_id', $categoriaAtiva->id);
 
-        // Se houver pesquisa, filtra apenas DENTRO dessa categoria
         if ($request->has('search') && $request->search != '') {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -52,21 +47,18 @@ class RoupaController extends Controller
         return view('roupas.index', compact('roupas', 'categorias', 'categoriaAtiva'));
     }
 
-    // 3. DETALHES DO PRODUTO
     public function show($id) 
     {
         $roupa = Roupa::with('categoria')->findOrFail($id);
         return view('roupas.show', compact('roupa'));
     }
 
-    // 4. FORMULÁRIO DE CRIAÇÃO
     public function create()
     {
         $categorias = Categoria::all(); 
         return view('roupas.create', compact('categorias'));
     }
 
-    // 5. SALVAR PRODUTO (Salva no storage/app/public padrão)
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -87,7 +79,6 @@ class RoupaController extends Controller
         return redirect()->route('roupas.index')->with('success', 'Produto cadastrado com sucesso!');
     }
 
-    // 6. EDITAR PRODUTO
     public function edit($id) 
     {
         $roupa = Roupa::findOrFail($id);
@@ -95,7 +86,6 @@ class RoupaController extends Controller
         return view('roupas.edit', compact('roupa', 'categorias'));
     }
 
-    // 7. ATUALIZAR PRODUTO (Atualiza no storage padrão)
     public function update(Request $request, $id) 
     {
         $roupa = Roupa::findOrFail($id);
@@ -121,7 +111,6 @@ class RoupaController extends Controller
         return redirect()->route('roupas.index')->with('success', 'Produto atualizado!');
     }
 
-    // 8. EXCLUIR PRODUTO
     public function destroy($id)
     {
         $roupa = Roupa::findOrFail($id);
@@ -134,7 +123,6 @@ class RoupaController extends Controller
         return redirect()->route('roupas.index')->with('success', 'Produto removido!');
     }
 
-    // 9. LÓGICA DE FAVORITAR
     public function favorito(Request $request, $id)
     {
         if (!Auth::check()) return redirect()->route('login');
@@ -149,7 +137,6 @@ class RoupaController extends Controller
         }
     }
 
-    // 10. LISTAR FAVORITOS
     public function favoritos()
     {
         if (!Auth::check()) return redirect()->route('login');
