@@ -8,7 +8,7 @@
                 <p class="text-center mb-8 text-gray-500 font-medium">Você está no modo editor. Use a aba superior para adicionar itens.</p>
             @else
                 <h1 class="text-3xl font-black my-2 text-center uppercase tracking-tighter text-gray-800">Produtos Disponíveis</h1>
-                <p class="text-center mb-8 text-gray-500 font-medium">Explore as melhores ofertas da Games Nest!</p>
+                <p class="text-center mb-8 text-gray-500 font-medium">Explore as melhores ofertas da Gamers Nest!</p>
             @endif
         @else
             <h1 class="text-3xl font-black my-2 text-center uppercase tracking-tighter text-gray-800">Produtos Disponíveis</h1>
