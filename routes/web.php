@@ -61,15 +61,20 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-Route::get('/storage/{folder}/{filename}', function ($folder, $filename) {
-    $path = storage_path('app/public/' . $folder . '/' . $filename);
+Route::get('/storage/{path}', function ($path) {
+    $path = str_replace('storage/', '', $path);
+    $fullPath = storage_path('app/public/' . $path);
     
-    if (!File::exists($path)) {
+    if (!File::exists($fullPath)) {
+        $fullPath = storage_path('app/public/products/' . $path);
+    }
+    
+    if (!File::exists($fullPath)) {
         abort(404);
     }
     
-    return Response::make(File::get($path), 200)
-        ->header("Content-Type", File::mimeType($path));
-})->where('folder', '.*');
+    return Response::make(File::get($fullPath), 200)
+        ->header("Content-Type", File::mimeType($fullPath));
+})->where('path', '.*');
 
 require __DIR__.'/auth.php';

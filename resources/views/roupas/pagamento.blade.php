@@ -1,12 +1,10 @@
 @extends('layouts.app')
 
 @section('slot')
-<div class="max-w-4xl mx-auto py-10 px-4">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="max-w-4xl mx-auto pt-6 pb-10 px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
         
-        {{-- Opções de Pagamento --}}
-        <div class="md:col-span-2 bg-white shadow-xl rounded-3xl p-8 border border-gray-100 min-h-[400px] flex flex-col justify-center">
-            
+        <div class="md:col-span-2 bg-white shadow-xl rounded-3xl p-8 border border-gray-100">
             <div id="container-form">
                 <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter mb-2 flex items-center gap-2">
                     <i class="fas fa-credit-card text-indigo-600"></i> Escolha a Forma de Pagamento
@@ -17,7 +15,6 @@
                     @csrf
                     
                     <div class="space-y-3">
-                        {{-- PIX --}}
                         @if(($config['pagamento_pix'] ?? true) == true)
                             <label class="flex items-center gap-4 p-4 bg-white border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-indigo-500 transition-all">
                                 <input type="radio" name="metodo_pagamento" value="pix" required class="text-indigo-600 focus:ring-indigo-500 w-5 h-5 border-gray-300">
@@ -28,7 +25,6 @@
                             </label>
                         @endif
 
-                        {{-- CRÉDITO --}}
                         @if(($config['pagamento_credito'] ?? true) == true)
                             <label class="flex items-center gap-4 p-4 bg-white border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-indigo-500 transition-all">
                                 <input type="radio" name="metodo_pagamento" value="credito" class="text-indigo-600 focus:ring-indigo-500 w-5 h-5 border-gray-300">
@@ -39,7 +35,6 @@
                             </label>
                         @endif
 
-                        {{-- BOLETO --}}
                         @if(($config['pagamento_debito'] ?? true) == true)
                             <label class="flex items-center gap-4 p-4 bg-white border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-indigo-500 transition-all">
                                 <input type="radio" name="metodo_pagamento" value="debito" class="text-indigo-600 focus:ring-indigo-500 w-5 h-5 border-gray-300">
@@ -62,7 +57,6 @@
                 </form>
             </div>
 
-            {{-- Mensagem de Sucesso --}}
             <div id="mensagem-sucesso" class="hidden text-center py-10">
                 <div class="text-green-500 text-6xl mb-4"><i class="fas fa-check-circle"></i></div>
                 <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">Compra Concluída!</h2>
@@ -73,15 +67,13 @@
             </div>
         </div>
 
-        {{-- Resumo Lateral --}}
-        <div class="bg-gray-50 rounded-3xl p-6 border border-gray-200 h-fit">
+        <div class="bg-gray-50 rounded-3xl p-6 border border-gray-200">
             <h3 class="font-bold text-gray-700 uppercase text-xs tracking-wider mb-4">Resumo do Pedido</h3>
             
             <div class="space-y-4">
                 @foreach($carrinho as $item)
                     <div class="flex gap-3 items-center">
-                        {{-- Certifique-se de que o caminho da imagem no seu banco está correto --}}
-                        <img src="{{ asset('storage/' . $item['imagem']) }}" class="w-12 h-12 object-cover rounded-xl bg-white shadow-sm">
+                        <img src="{{ asset('storage/' . $item['imagem']) }}" class="w-12 h-12 object-cover rounded-xl bg-white shadow-sm flex-shrink-0">
                         <div>
                             <h4 class="font-bold text-xs text-gray-800">{{ $item['nome'] }}</h4>
                             <p class="text-indigo-600 font-black text-xs">
