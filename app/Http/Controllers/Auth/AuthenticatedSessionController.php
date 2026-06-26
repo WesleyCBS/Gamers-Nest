@@ -11,17 +11,10 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
     public function create(): View
     {
         return view('auth.login');
     }
-
-    /**
-     * Handle an incoming authentication request.
-     */
 
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -32,21 +25,15 @@ class AuthenticatedSessionController extends Controller
         return $this->authenticated($request, Auth::user());
     }
 
-     // Método autenticado que faz o redirecionamento com base no papel do usuário
     protected function authenticated(Request $request, $user)
     {
-         // Verifica se o usuário é um admin
         if ($user->role === 'admin') {
             return redirect()->route('dashboard');
         }
 
-         // Caso contrário, redireciona para o catálogo
         return redirect()->route('roupas.index');
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
