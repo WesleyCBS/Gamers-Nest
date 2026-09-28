@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Roupa;
+use App\Models\Produto;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-class RoupaController extends Controller
+class ProdutoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Roupa::with('categoria');
+        $query = Produto::with('categoria');
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->input('search');
@@ -22,16 +22,16 @@ class RoupaController extends Controller
             });
         }
 
-        $roupas = $query->paginate(10)->withQueryString();
+        $produtos = $query->paginate(10)->withQueryString();
         $categorias = Categoria::all(); 
-        return view('roupas.index', compact('roupas', 'categorias'));
+        return view('produtos.index', compact('produtos', 'categorias'));
     }
 
     public function porCategoria(Request $request, $slug)
     {
         $categoriaAtiva = Categoria::where('slug', $slug)->firstOrFail();
         
-        $query = Roupa::where('categoria_id', $categoriaAtiva->id);
+        $query = Produto::where('categoria_id', $categoriaAtiva->id);
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->input('search');
@@ -41,22 +41,22 @@ class RoupaController extends Controller
             });
         }
         
-        $roupas = $query->paginate(10)->withQueryString();
+        $produtos = $query->paginate(10)->withQueryString();
         $categorias = Categoria::all(); 
 
-        return view('roupas.index', compact('roupas', 'categorias', 'categoriaAtiva'));
+        return view('produtos.index', compact('produtos', 'categorias', 'categoriaAtiva'));
     }
 
     public function show($id) 
     {
-        $roupa = Roupa::with('categoria')->findOrFail($id);
-        return view('roupas.show', compact('roupa'));
+        $produto = Produto::with('categoria')->findOrFail($id);
+        return view('produtos.show', compact('produto'));
     }
 
     public function create()
     {
         $categorias = Categoria::all(); 
-        return view('roupas.create', compact('categorias'));
+        return view('produtos.create', compact('categorias'));
     }
 
     public function store(Request $request)
@@ -75,20 +75,20 @@ class RoupaController extends Controller
             $data['imagem'] = $path; 
         }
 
-        Roupa::create($data);
-        return redirect()->route('roupas.index')->with('success', 'Produto cadastrado com sucesso!');
+        Produto::create($data);
+        return redirect()->route('produtos.index')->with('success', 'Produto cadastrado com sucesso!');
     }
 
     public function edit($id) 
     {
-        $roupa = Roupa::findOrFail($id);
+        $produto = Produto::findOrFail($id);
         $categorias = Categoria::all();
-        return view('roupas.edit', compact('roupa', 'categorias'));
+        return view('produtos.edit', compact('produto', 'categorias'));
     }
 
     public function update(Request $request, $id) 
     {
-        $roupa = Roupa::findOrFail($id);
+        $produto = Produto::findOrFail($id);
         
         $data = $request->validate([
             'nome' => 'required|string|max:255',
@@ -100,27 +100,27 @@ class RoupaController extends Controller
         ]);
 
         if ($request->hasFile('imagem')) {
-            if ($roupa->imagem && Storage::disk('public')->exists($roupa->imagem)) {
-                Storage::disk('public')->delete($roupa->imagem);
+            if ($produto->imagem && Storage::disk('public')->exists($produto->imagem)) {
+                Storage::disk('public')->delete($produto->imagem);
             }
             $path = $request->file('imagem')->store('products', 'public');
             $data['imagem'] = $path;
         }
 
-        $roupa->update($data);
-        return redirect()->route('roupas.index')->with('success', 'Produto atualizado!');
+        $produto->update($data);
+        return redirect()->route('produtos.index')->with('success', 'Produto atualizado!');
     }
 
     public function destroy($id)
     {
-        $roupa = Roupa::findOrFail($id);
+        $produto = Produto::findOrFail($id);
         
-        if ($roupa->imagem && Storage::disk('public')->exists($roupa->imagem)) {
-            Storage::disk('public')->delete($roupa->imagem);
+        if ($produto->imagem && Storage::disk('public')->exists($produto->imagem)) {
+            Storage::disk('public')->delete($produto->imagem);
         }
 
-        $roupa->delete();
-        return redirect()->route('roupas.index')->with('success', 'Produto removido!');
+        $produto->delete();
+        return redirect()->route('produtos.index')->with('success', 'Produto removido!');
     }
 
     public function favorito(Request $request, $id)
@@ -141,8 +141,15 @@ class RoupaController extends Controller
     {
         if (!Auth::check()) return redirect()->route('login');
 
-        $roupasFavoritas = Auth::user()->favoritos;
+        $produtosFavoritos = Auth::user()->favoritos;
         $categorias = Categoria::all(); 
-        return view('roupas.favoritos', compact('roupasFavoritas', 'categorias'));
+        return view('produtos.favoritos', compact('produtosFavoritos', 'categorias'));
+    }
+
+    // ADICIONADO/CORRIGIDO: Aponta para a pasta correta 'produtos.endereco'
+    public function endereco($id = null)
+    {
+        $produto = $id ? Produto::findOrFail($id) : null;
+        return view('produtos.endereco', compact('produto'));
     }
 }

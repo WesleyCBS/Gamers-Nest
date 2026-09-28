@@ -16,6 +16,13 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'foto',
+        'cep',
+        'logradouro',
+        'numero',
+        'bairro',
+        'cidade',
+        'uf',
     ];
 
     protected $hidden = [
@@ -31,10 +38,8 @@ class User extends Authenticatable
         ];
     }
 
-    // RELAÇÃO DE FAVORITOS
     public function favoritos(): BelongsToMany
     {
-        // 'favorites' é a tabela, 'user_id' e 'ropa_id' são as colunas
-        return $this->belongsToMany(Roupa::class, 'favorites', 'user_id', 'roupa_id');
+        return $this->belongsToMany(Produto::class, 'favorites', 'user_id', 'produto_id');
     }
 }

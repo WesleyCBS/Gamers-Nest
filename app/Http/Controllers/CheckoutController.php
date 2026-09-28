@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Roupa;
+use App\Models\Produto;
 use Illuminate\Support\Facades\Storage;
 
 class CheckoutController extends Controller
@@ -20,7 +20,7 @@ class CheckoutController extends Controller
 
     public function iniciar(Request $request, $id)
     {
-        $produto = Roupa::findOrFail($id);
+        $produto = Produto::findOrFail($id);
         $carrinho = session()->get('carrinho', []);
 
         if(isset($carrinho[$id])) {
@@ -35,7 +35,7 @@ class CheckoutController extends Controller
         }
 
         session()->put('carrinho', $carrinho);
-        return redirect()->route('checkout.endereco');
+        return redirect()->route('carrinho.index');
     }
 
     public function index()
@@ -43,13 +43,13 @@ class CheckoutController extends Controller
         if (!session()->has('carrinho') || count(session('carrinho')) == 0) {
             return redirect()->route('carrinho.index')->with('error', 'Seu carrinho está vazio.');
         }
-        return redirect()->route('checkout.endereco');
+        return redirect()->route('carrinho.index');
     }
 
     public function configuracoesForm()
     {
         $config = $this->getSettings();
-        return view('roupas.configuracoes', ['configuracoes' => (object) $config]);
+        return view('produtos.configuracoes', ['configuracoes' => (object) $config]);
     }
 
     public function salvarConfiguracoes(Request $request)
@@ -71,33 +71,35 @@ class CheckoutController extends Controller
 
     public function enderecoForm()
     {
-        return view('roupas.endereco');
+        return redirect()->route('carrinho.index');
     }
 
     public function salvarEndereco(Request $request)
     {
         $dadosEndereco = $request->validate([
             'cep' => 'required|string|max:9',
-            'rua' => 'required|string|max:255',
+            'logradouro' => 'required|string|max:255',
             'numero' => 'required|string|max:20',
             'bairro' => 'required|string|max:255',
             'cidade' => 'required|string|max:255',
         ]);
+
         session(['checkout_endereco' => $dadosEndereco]);
+
         return redirect()->route('checkout.pagamento');
     }
 
     public function pagamentoForm()
     {
         if (!session()->has('checkout_endereco')) {
-            return redirect()->route('checkout.endereco');
+            return redirect()->route('carrinho.index');
         }
         
         $endereco = session('checkout_endereco');
         $config = $this->getSettings();
         $carrinho = session('carrinho', []);
 
-        return view('roupas.pagamento', compact('endereco', 'config', 'carrinho'));
+        return view('produtos.pagamento', compact('endereco', 'config', 'carrinho'));
     }
 
     public function finalizarCompra(Request $request)

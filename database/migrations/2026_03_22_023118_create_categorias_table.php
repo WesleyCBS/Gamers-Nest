@@ -20,8 +20,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 2. Adiciona a coluna categoria_id na tabela de roupas para vincular os produtos
-        Schema::table('roupas', function (Blueprint $table) {
+        Schema::table('produto', function (Blueprint $table) {
             $table->foreignId('categoria_id')
                   ->nullable()           // Pode ser nulo se você tiver produtos sem categoria
                   ->constrained('categorias') 
@@ -35,7 +34,7 @@ return new class extends Migration
     public function down(): void
     {
         // Remove a chave estrangeira antes de dropar a tabela
-        Schema::table('roupas', function (Blueprint $table) {
+        Schema::table('produto', function (Blueprint $table) {
             $table->dropForeign(['categoria_id']);
             $table->dropColumn('categoria_id');
         });

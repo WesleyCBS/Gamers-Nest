@@ -49,13 +49,13 @@
         <div class="bg-gray-50 rounded-3xl p-6 border border-gray-200 h-fit">
             <h3 class="font-bold text-gray-700 uppercase text-xs tracking-wider mb-4">Resumo do Pedido</h3>
             
-            @if(isset($roupa) && $roupa)
+            @if(isset($produto) && $produto)
                 <div class="flex gap-3 items-center">
-                    <img src="{{ Storage::url($roupa->imagem) }}" class="w-16 h-16 object-cover rounded-xl bg-white shadow-sm">
+                    <img src="{{ Storage::url($produto->imagem) }}" class="w-16 h-16 object-cover rounded-xl bg-white shadow-sm">
                     <div>
-                        <h4 class="font-bold text-sm text-gray-800 leading-tight">{{ $roupa->nome }}</h4>
+                        <h4 class="font-bold text-sm text-gray-800 leading-tight">{{ $produto->nome }}</h4>
                         <span class="text-xs text-gray-400">1 unidade</span>
-                        <p class="text-indigo-600 font-black text-sm mt-1">R$ {{ number_format($roupa->preço, 2, ',', '.') }}</p>
+                        <p class="text-indigo-600 font-black text-sm mt-1">R$ {{ number_format($produto->preço, 2, ',', '.') }}</p>
                     </div>
                 </div>
             @elseif(session()->has('carrinho'))

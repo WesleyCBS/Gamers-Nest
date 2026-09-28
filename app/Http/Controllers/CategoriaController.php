@@ -25,7 +25,7 @@ class CategoriaController extends Controller
             'icone' => $request->icone ?? 'fas fa-tag',
         ]);
 
-        return redirect()->route('roupas.index')->with('success', 'Console cadastrado!');
+        return redirect()->route('produtos.index')->with('success', 'Console cadastrado!');
     }
 
     public function edit($id)
@@ -49,16 +49,15 @@ class CategoriaController extends Controller
         
         $categoria->save();
 
-        return redirect()->route('roupas.index')->with('success', 'Console atualizado com sucesso!');
+        return redirect()->route('produtos.index')->with('success', 'Console atualizado com sucesso!');
     }
 
     public function destroy($id)
     {
         $categoria = Categoria::findOrFail($id);
-        $categoria->roupas()->delete(); 
+        $categoria->produtos()->delete(); 
         $categoria->delete();
 
-        return redirect()->route('roupas.index')->with('success', 'Console removido!');
+        return redirect()->route('produtos.index')->with('success', 'Console removido!');
     }
-    
 }

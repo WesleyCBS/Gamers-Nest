@@ -48,8 +48,6 @@ class RegisteredUserController extends Controller
 
     Auth::login($user);
     
-    // 3. Redirecionamento seguro: 
-    // Se 'roupas.index' não funciona, use '/' para ir para a página inicial
     return redirect('/'); 
 }
 }

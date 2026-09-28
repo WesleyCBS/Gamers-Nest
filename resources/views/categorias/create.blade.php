@@ -48,7 +48,7 @@
                         Confirmar Cadastro
                     </button>
 
-                    <a href="{{ route('roupas.create') }}" class="block text-center w-full text-gray-500 font-bold hover:underline py-2 uppercase text-xs tracking-widest">
+                    <a href="{{ route('produtos.create') }}" class="block text-center w-full text-gray-500 font-bold hover:underline py-2 uppercase text-xs tracking-widest">
                         Cancelar e Voltar
                     </a>
                 </div>

@@ -33,14 +33,14 @@
 
         <div class="max-w-7xl mx-auto px-7 mb-10">
             <div class="flex flex-wrap justify-center gap-3">
-                <a href="{{ route('roupas.index') }}" 
+                <a href="{{ route('produtos.index') }}" 
                    class="px-5 py-2 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all shadow-sm {{ !isset($categoriaAtiva) ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50' }}">
                     <i class="fas fa-border-all mr-1"></i> Todos
                 </a>
 
                 @foreach($categorias as $cat)
                     <div class="flex items-center shadow-sm rounded-2xl overflow-hidden">
-                        <a href="{{ route('roupas.categoria', $cat->slug) }}" 
+                        <a href="{{ route('produtos.categoria', $cat->slug) }}" 
                            class="px-5 py-2 font-bold uppercase text-xs tracking-widest transition-all flex items-center gap-2 {{ (isset($categoriaAtiva) && $categoriaAtiva->id == $cat->id) ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border-r border-gray-100' }}">
                             <i class="{{ $cat->icone }}"></i>
                             {{ $cat->nome }}
@@ -66,25 +66,26 @@
         </div>
 
         <div class="flex flex-wrap justify-center gap-8 px-7">
-            @forelse ($roupas as $roupa)
+            @forelse ($produtos as $produto)
                 <div class="bg-white shadow-xl rounded-3xl overflow-hidden w-64 flex flex-col h-[450px] transition-transform hover:scale-105 border border-gray-100 relative group">
-                    <a href="{{ route('roupas.show', $roupa->id) }}" class="absolute inset-0 z-10" title="Ver {{ $roupa->nome }}"></a>
+                    <a href="{{ route('produtos.show', $produto->id) }}" class="absolute inset-0 z-10" title="Ver {{ $produto->nome }}"></a>
+                    
                     <div class="h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
-                        <img src="/storage/products/{{ basename($roupa->imagem) }}" alt="{{ $roupa->nome }}" class="w-full h-full object-cover">
+                        <img src="/storage/products/{{ basename($produto->imagem) }}" alt="{{ $produto->nome }}" class="w-full h-full object-cover">
                     </div>
 
                     <div class="flex flex-col p-5 flex-grow">
                         <div class="flex justify-between items-start mb-2">
-                            <h2 class="text-lg font-bold text-gray-800 leading-tight">{{ $roupa->nome }}</h2>
+                            <h2 class="text-lg font-bold text-gray-800 leading-tight">{{ $produto->nome }}</h2>
                             @auth
                                 @if(strtolower(Auth::user()->role) === 'admin')
                                     <div class="relative z-20 flex gap-2">
-                                        <a href="{{ route('roupas.edit', $roupa->id) }}" class="text-blue-500 hover:text-blue-700">
+                                        <a href="{{ route('produtos.edit', $produto->id) }}" class="text-blue-500 hover:text-blue-700">
                                             <i class="fas fa-edit text-sm"></i>
                                         </a>
-                                        <form id="del-roupa-{{ $roupa->id }}" action="{{ route('roupas.destroy', $roupa->id) }}" method="POST">
+                                        <form id="del-produto-{{ $produto->id }}" action="{{ route('produtos.destroy', $produto->id) }}" method="POST">
                                             @csrf @method('DELETE')
-                                            <button type="button" onclick="confirmarExclusao('del-roupa-{{ $roupa->id }}')" class="text-red-500 hover:text-red-700">
+                                            <button type="button" onclick="confirmarExclusao('del-produto-{{ $produto->id }}')" class="text-red-500 hover:text-red-700">
                                                 <i class="fas fa-trash-alt text-sm"></i>
                                             </button>
                                         </form>
@@ -92,21 +93,21 @@
                                 @endif
                             @endauth
                         </div>
-                        <p class="text-gray-500 text-sm line-clamp-2 mb-2">{{ $roupa->descrição }}</p>
-                        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-auto">Estoque: {{ $roupa->quantidade }}</p>
+                        <p class="text-gray-500 text-sm line-clamp-2 mb-2">{{ $produto->descrição }}</p>
+                        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-auto">Estoque: {{ $produto->quantidade }}</p>
                     </div>
 
                     <div class="bg-gray-50 px-5 py-4 border-t border-gray-100 flex justify-between items-center relative z-20">
                         <div class="flex flex-col">
                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Preço</span>
-                            <span class="text-xl font-black text-indigo-600 leading-none">R$ {{ number_format($roupa->preço, 2, ',', '.') }}</span>
+                            <span class="text-xl font-black text-indigo-600 leading-none">R$ {{ number_format($produto->preço, 2, ',', '.') }}</span>
                         </div>
                         <div class="flex items-center gap-4">
                             @auth
-                                <form action="{{ route('roupas.favorito', $roupa->id) }}" method="POST">
+                                <form action="{{ route('produtos.favorito', $produto->id) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="hover:scale-125 transition-transform duration-200">
-                                        <i class="{{ Auth::user()->favoritos->contains($roupa->id) ? 'fas' : 'far' }} fa-heart text-red-500 text-xl"></i>
+                                        <i class="{{ Auth::user()->favoritos->contains($produto->id) ? 'fas' : 'far' }} fa-heart text-red-500 text-xl"></i>
                                     </button>
                                 </form>
                             @else
@@ -115,7 +116,7 @@
                                 </a>
                             @endauth
                             @auth
-                                <form action="{{ route('carrinho.adicionar', $roupa->id) }}" method="POST">
+                                <form action="{{ route('carrinho.adicionar', $produto->id) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="bg-indigo-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-indigo-700 hover:scale-110 transition-all shadow-md active:scale-95">
                                         <i class="fas fa-cart-plus text-sm"></i>
@@ -138,7 +139,7 @@
         </div>
 
         <div class="mt-10 px-7 mb-10">
-            {{ $roupas->appends(['search' => request('search')])->links() }}
+            {{ $produtos->appends(['search' => request('search')])->links() }}
         </div>
     </div>
 

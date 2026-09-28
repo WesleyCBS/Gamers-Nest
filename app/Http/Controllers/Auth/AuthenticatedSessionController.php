@@ -31,7 +31,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return redirect()->route('roupas.index');
+        return redirect()->route('produtos.index');
     }
 
     public function destroy(Request $request): RedirectResponse

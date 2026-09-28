@@ -11,7 +11,7 @@
         </div>
 
         <div class="w-1/2 p-10">
-            <form method="POST" action="{{ route('roupas.update', $roupa->id) }}" enctype="multipart/form-data" class="space-y-4">
+            <form method="POST" action="{{ route('produtos.update', $produto->id) }}" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 @method('PUT') 
 
@@ -19,7 +19,7 @@
                     <x-input-label for="categoria_id" :value="__('Plataforma/Console')" />
                     <select name="categoria_id" id="categoria_id" class="block w-full mt-1 border-gray-300 rounded-xl focus:ring-indigo-500" required>
                         @foreach($categorias as $cat)
-                            <option value="{{ $cat->id }}" {{ $roupa->categoria_id == $cat->id ? 'selected' : '' }}>
+                            <option value="{{ $cat->id }}" {{ $produto->categoria_id == $cat->id ? 'selected' : '' }}>
                                 {{ $cat->nome }}
                             </option>
                         @endforeach
@@ -28,35 +28,35 @@
 
                 <div>
                     <x-input-label for="nome" :value="__('Nome do Item')" />
-                    <x-text-input id="nome" class="block w-full mt-1" type="text" name="nome" value="{{ $roupa->nome }}" required />
+                    <x-text-input id="nome" class="block w-full mt-1" type="text" name="nome" value="{{ $produto->nome }}" required />
                 </div>
 
                 <div>
                     <x-input-label for="descrição" :value="__('Descrição')" />
-                    <textarea id="descrição" name="descrição" class="block w-full mt-1 border-gray-300 rounded-xl focus:ring-indigo-500" rows="3">{{ $roupa->descrição }}</textarea>
+                    <textarea id="descrição" name="descrição" class="block w-full mt-1 border-gray-300 rounded-xl focus:ring-indigo-500" rows="3">{{ $produto->descrição }}</textarea>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <x-input-label for="preço" :value="__('Preço (R$)')" />
-                        <x-text-input id="preço" class="block w-full mt-1" type="number" step="0.01" name="preço" value="{{ $roupa->preço }}" required />
+                        <x-text-input id="preço" class="block w-full mt-1" type="number" step="0.01" name="preço" value="{{ $produto->preço }}" required />
                     </div>
                     <div>
                         <x-input-label for="quantidade" :value="__('Estoque')" />
-                        <x-text-input id="quantidade" class="block w-full mt-1" type="number" name="quantidade" value="{{ $roupa->quantidade }}" required />
+                        <x-text-input id="quantidade" class="block w-full mt-1" type="number" name="quantidade" value="{{ $produto->quantidade }}" required />
                     </div>
                 </div>
 
                 <div>
                     <x-input-label for="imagem" :value="__('Trocar Foto (Opcional)')" />
                     <div class="mt-1 flex items-center gap-4">
-                        <img src="{{ asset($roupa->imagem) }}" class="w-12 h-12 object-cover rounded-lg border">
+                        <img src="{{ asset($produto->imagem) }}" class="w-12 h-12 object-cover rounded-lg border">
                         <input type="file" name="imagem" class="block w-full text-sm text-gray-500" />
                     </div>
                 </div>
 
                 <div class="flex gap-3 pt-4">
-                    <a href="{{ route('roupas.index') }}" class="w-1/3 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold uppercase text-center hover:bg-gray-300 transition-all">
+                    <a href="{{ route('produtos.index') }}" class="w-1/3 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold uppercase text-center hover:bg-gray-300 transition-all">
                         Cancelar
                     </a>
                     <button type="submit" class="w-2/3 bg-indigo-600 text-white py-3 rounded-xl font-bold uppercase hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all">

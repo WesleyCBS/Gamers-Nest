@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="flex gap-3 pt-6">
-                    <a href="{{ route('roupas.index') }}" class="w-1/3 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold uppercase text-center hover:bg-gray-300 transition-all">
+                    <a href="{{ route('produtos.index') }}" class="w-1/3 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold uppercase text-center hover:bg-gray-300 transition-all">
                         Voltar
                     </a>
                     <button type="submit" class="w-2/3 bg-indigo-600 text-white py-3 rounded-xl font-bold uppercase hover:bg-indigo-700 shadow-lg transition-all">

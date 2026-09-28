@@ -47,10 +47,10 @@
                     </div>
 
                     <div class="pt-4 flex justify-between items-center">
-                        <a href="{{ route('checkout.endereco') }}" class="text-xs font-bold uppercase tracking-wider text-gray-400">
-                            <i class="fas fa-chevron-left mr-1"></i> Voltar endereço
+                        <a href="{{ route('carrinho.index') }}" class="text-xs font-bold uppercase tracking-wider text-gray-400">
+                            <i class="fas fa-chevron-left mr-1"></i> Voltar ao carrinho
                         </a>
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase text-xs tracking-widest px-8 py-3 rounded-xl shadow-md transition-all">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase text-xs tracking-widest px-8 py-3 rounded-xl shadow-md transition-all cursor-pointer">
                             Concluir Pedido <i class="fas fa-check ml-2"></i>
                         </button>
                     </div>
@@ -61,7 +61,7 @@
                 <div class="text-green-500 text-6xl mb-4"><i class="fas fa-check-circle"></i></div>
                 <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tighter">Compra Concluída!</h2>
                 <p class="text-gray-500 mb-6">Agradecemos pela preferência.</p>
-                <a href="{{ route('roupas.index') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase text-xs tracking-widest px-8 py-4 rounded-xl transition-all shadow-md">
+                <a href="{{ route('produtos.index') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase text-xs tracking-widest px-8 py-4 rounded-xl transition-all shadow-md">
                     Voltar à Tela Inicial
                 </a>
             </div>
@@ -72,8 +72,9 @@
             
             <div class="space-y-4">
                 @foreach($carrinho as $item)
+                    @php $imagemLimpa = str_replace('storage/', '', $item['imagem']); @endphp
                     <div class="flex gap-3 items-center">
-                        <img src="{{ asset('storage/' . $item['imagem']) }}" class="w-12 h-12 object-cover rounded-xl bg-white shadow-sm flex-shrink-0">
+                        <img src="{{ Storage::url($imagemLimpa) }}" class="w-12 h-12 object-cover rounded-xl bg-white shadow-sm flex-shrink-0">
                         <div>
                             <h4 class="font-bold text-xs text-gray-800">{{ $item['nome'] }}</h4>
                             <p class="text-indigo-600 font-black text-xs">
@@ -86,7 +87,7 @@
 
             <div class="mt-6 pt-4 border-t border-gray-200">
                 <p class="text-[10px] text-gray-500 uppercase font-bold">Endereço de Entrega</p>
-                <p class="text-xs text-gray-700">{{ $endereco['rua'] }}, {{ $endereco['numero'] }}</p>
+                <p class="text-xs text-gray-700">{{ $endereco['logradouro'] }}, {{ $endereco['numero'] }}</p>
                 <p class="text-xs text-gray-700">{{ $endereco['bairro'] }} - {{ $endereco['cidade'] }}</p>
             </div>
         </div>

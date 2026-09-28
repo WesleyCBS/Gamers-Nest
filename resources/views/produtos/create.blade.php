@@ -18,7 +18,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('roupas.store') }}" enctype="multipart/form-data" class="space-y-4">
+            <form method="POST" action="{{ route('produtos.store') }}" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 <div>
                     <div class="flex justify-between items-center mb-1">

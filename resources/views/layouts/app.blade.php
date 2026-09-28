@@ -20,6 +20,10 @@
             @include('layouts.navigation')
 
             <main>
+                @isset($slot)
+                    {{ $slot }}
+                @endisset
+
                 @yield('slot')
             </main>
         </div>
