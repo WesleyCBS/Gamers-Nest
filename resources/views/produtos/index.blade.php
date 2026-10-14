@@ -2,6 +2,61 @@
 
 @section('slot')
     <div class="py-6">
+
+        <!-- Carrossel de Banners Estilo Mercado Livre -->
+        @php
+            $pathSettings = storage_path('app/settings.json');
+            $configApp = file_exists($pathSettings) ? json_decode(file_get_contents($pathSettings), true) : [];
+            $bannersList = $configApp['banners'] ?? [];
+        @endphp
+
+        @if(count($bannersList) > 0)
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+                <div class="relative rounded-3xl overflow-hidden shadow-xl bg-gray-900 w-full aspect-[3/1]" 
+                     x-data="{ 
+                        activeSlide: 0, 
+                        slides: {{ count($bannersList) }}, 
+                        autoplay() { 
+                            setInterval(() => { 
+                                this.activeSlide = (this.activeSlide + 1) % this.slides; 
+                            }, 4000); 
+                        } 
+                     }" 
+                     x-init="autoplay()">
+                    
+                    <!-- Slides -->
+                    <div class="relative w-full h-full">
+                        @foreach($bannersList as $index => $banner)
+                            <div x-show="activeSlide === {{ $index }}" 
+                                 x-transition:enter="transition ease-out duration-500" 
+                                 x-transition:enter-start="opacity-0 scale-105" 
+                                 x-transition:enter-end="opacity-100 scale-100" 
+                                 class="absolute inset-0 w-full h-full flex items-center justify-center bg-gray-900">
+                                <img src="{{ Storage::url($banner) }}" class="w-full h-full object-contain">
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Botões de Navegação (Setas) -->
+                    <button @click="activeSlide = (activeSlide - 1 + slides) % slides" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer">
+                        <i class="fas fa-chevron-left text-sm"></i>
+                    </button>
+                    <button @click="activeSlide = (activeSlide + 1) % slides" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer">
+                        <i class="fas fa-chevron-right text-sm"></i>
+                    </button>
+
+                    <!-- Indicadores (Bolinhos) -->
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                        @foreach($bannersList as $index => $banner)
+                            <button @click="activeSlide = {{ $index }}" 
+                                    :class="{ 'bg-white w-6': activeSlide === {{ $index }}, 'bg-white/50 w-2.5': activeSlide !== {{ $index }}}" 
+                                    class="h-2.5 rounded-full transition-all duration-300 cursor-pointer"></button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @auth
             @if (strtolower(Auth::user()->role) === 'admin')
                 <h1 class="text-3xl font-black my-2 text-center uppercase tracking-tighter text-gray-800">Gerenciamento de Catálogo</h1>
@@ -14,22 +69,6 @@
             <h1 class="text-3xl font-black my-2 text-center uppercase tracking-tighter text-gray-800">Produtos Disponíveis</h1>
             <p class="text-center mb-8 text-gray-500 font-medium tracking-tight">Faça login para salvar seus favoritos!</p>
         @endauth
-
-        <div class="max-w-md mx-auto mb-10 px-7">
-            <form action="{{ url()->current() }}" method="GET" class="relative group">
-                <input type="text" name="search" value="{{ request('search') }}"
-                    placeholder="{{ isset($categoriaAtiva) ? 'Buscar em ' . $categoriaAtiva->nome . '...' : 'O que você está procurando?' }}" 
-                    class="w-full pl-12 pr-10 py-3 rounded-2xl border-none shadow-md focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-gray-400 font-medium text-gray-700">
-                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
-                    <i class="fas fa-search text-lg"></i>
-                </div>
-                @if(request('search'))
-                    <a href="{{ url()->current() }}" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
-                        <i class="fas fa-times-circle"></i>
-                    </a>
-                @endif
-            </form>
-        </div>
 
         <div class="max-w-7xl mx-auto px-7 mb-10">
             <div class="flex flex-wrap justify-center gap-3">

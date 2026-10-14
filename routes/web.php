@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/produtos/configuracoes', [CheckoutController::class, 'configuracoesForm'])->name('admin.configuracoes');
         Route::put('/produtos/configuracoes', [CheckoutController::class, 'salvarConfiguracoes'])->name('admin.configuracoes.update');
+        Route::delete('/admin/configuracoes/banner/{index}', [CheckoutController::class, 'removerBanner'])->name('admin.banner.remover');
 
         Route::get('/produtos/create', [ProdutoController::class, 'create'])->name('produtos.create');
         Route::post('/produtos', [ProdutoController::class, 'store'])->name('produtos.store');
