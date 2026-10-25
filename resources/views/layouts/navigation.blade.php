@@ -28,7 +28,7 @@
                     <form action="{{ route('produtos.index') }}" method="GET" class="w-full relative">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="O que você está procurando?" 
                                class="w-full bg-white text-gray-800 text-xs rounded-xl pl-9 pr-4 py-2 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition placeholder:text-gray-400">
-                        <button type="submit" class="absolute left-3 top-2.5 text-gray-400 hover:text-indigo-600">
+                               <button type="submit" class="absolute inset-y-0 left-3 flex items-center text-gray-400 hover:text-indigo-600">
                             <i class="fas fa-search text-xs"></i>
                         </button>
                     </form>
@@ -43,13 +43,16 @@
                             <x-nav-link :href="route('produtos.create')" :active="request()->routeIs('produtos.create')" class="!text-green-400 font-black !border-none">
                                 <i class="fas fa-plus-square mr-1.5"></i> Produto
                             </x-nav-link>
+                            <x-nav-link :href="route('admin.pedidos')" :active="request()->routeIs('admin.pedidos')" class="!text-amber-400 font-black !border-none">
+                                <i class="fas fa-chart-line mr-1.5"></i> Vendas
+                            </x-nav-link>
                         @endif
                     @endauth
                 </div>
             </div>
 
             <!-- Lado Direito: Favoritos, Carrinho e Perfil -->
-            <div class="hidden sm:flex sm:items-center sm:space-x-6">
+            <div class="hidden sm:flex sm:items-center sm:space-x-6 sm:ml-8">
                 @auth
                     @php 
                         $favoritosCount = Auth::user()->favoritos ? Auth::user()->favoritos->count() : 0; 
@@ -105,8 +108,17 @@
                                 <x-dropdown-link :href="route('admin.configuracoes')" class="text-indigo-600 font-bold">
                                     Configurações
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.pedidos')" class="text-indigo-600 font-bold">
+                                    Histórico de Vendas
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.destaques')" class="text-indigo-600 font-bold">
+                                    Produtos em Destaque
+                                </x-dropdown-link>
                             @endif
                             <x-dropdown-link :href="route('profile.edit')">Meu Perfil</x-dropdown-link>
+                            @if(strtolower(Auth::user()->role) !== 'admin')
+                            <x-dropdown-link :href="route('pedidos.meus')">Minhas Compras</x-dropdown-link>
+                        @endif
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">Sair</x-dropdown-link>
@@ -114,10 +126,14 @@
                         </x-slot>
                     </x-dropdown>
                 @else
-                    <div class="space-x-3">
-                        <a href="{{ route('login') }}" class="text-sm text-gray-300 hover:text-white underline">Entrar</a>
-                        <a href="{{ route('register') }}" class="text-sm text-indigo-400 font-bold underline">Cadastrar</a>
-                    </div>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl transition whitespace-nowrap">
+                        <i class="fas fa-user"></i> Entrar
+                    </a>
+                    <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-md shadow-indigo-900/40 transition whitespace-nowrap">
+                        <i class="fas fa-user-plus"></i> Cadastrar
+                    </a>
+                </div>
                 @endauth
             </div>
         </div>

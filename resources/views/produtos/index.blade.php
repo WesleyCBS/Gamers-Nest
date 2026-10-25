@@ -106,73 +106,39 @@
 
         <div class="flex flex-wrap justify-center gap-8 px-7">
             @forelse ($produtos as $produto)
-                <div class="bg-white shadow-xl rounded-3xl overflow-hidden w-64 flex flex-col h-[450px] transition-transform hover:scale-105 border border-gray-100 relative group">
-                    <a href="{{ route('produtos.show', $produto->id) }}" class="absolute inset-0 z-10" title="Ver {{ $produto->nome }}"></a>
-                    
-                    <div class="h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
-                        <img src="/storage/products/{{ basename($produto->imagem) }}" alt="{{ $produto->nome }}" class="w-full h-full object-cover">
-                    </div>
-
-                    <div class="flex flex-col p-5 flex-grow">
-                        <div class="flex justify-between items-start mb-2">
-                            <h2 class="text-lg font-bold text-gray-800 leading-tight">{{ $produto->nome }}</h2>
-                            @auth
-                                @if(strtolower(Auth::user()->role) === 'admin')
-                                    <div class="relative z-20 flex gap-2">
-                                        <a href="{{ route('produtos.edit', $produto->id) }}" class="text-blue-500 hover:text-blue-700">
-                                            <i class="fas fa-edit text-sm"></i>
-                                        </a>
-                                        <form id="del-produto-{{ $produto->id }}" action="{{ route('produtos.destroy', $produto->id) }}" method="POST">
-                                            @csrf @method('DELETE')
-                                            <button type="button" onclick="confirmarExclusao('del-produto-{{ $produto->id }}')" class="text-red-500 hover:text-red-700">
-                                                <i class="fas fa-trash-alt text-sm"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                @endif
-                            @endauth
-                        </div>
-                        <p class="text-gray-500 text-sm line-clamp-2 mb-2">{{ $produto->descrição }}</p>
-                        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-auto">Estoque: {{ $produto->quantidade }}</p>
-                    </div>
-
-                    <div class="bg-gray-50 px-5 py-4 border-t border-gray-100 flex justify-between items-center relative z-20">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Preço</span>
-                            <span class="text-xl font-black text-indigo-600 leading-none">R$ {{ number_format($produto->preço, 2, ',', '.') }}</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            @auth
-                                <form action="{{ route('produtos.favorito', $produto->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="hover:scale-125 transition-transform duration-200">
-                                        <i class="{{ Auth::user()->favoritos->contains($produto->id) ? 'fas' : 'far' }} fa-heart text-red-500 text-xl"></i>
-                                    </button>
-                                </form>
-                            @else
-                                <a href="{{ route('login') }}" class="hover:scale-125 transition-transform duration-200">
-                                    <i class="far fa-heart text-red-500 text-xl"></i>
-                                </a>
-                            @endauth
-                            @auth
-                                <form action="{{ route('carrinho.adicionar', $produto->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="bg-indigo-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-indigo-700 hover:scale-110 transition-all shadow-md active:scale-95">
-                                        <i class="fas fa-cart-plus text-sm"></i>
-                                    </button>
-                                </form>
-                            @else
-                                <a href="{{ route('login') }}" class="bg-indigo-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-indigo-700 hover:scale-110 transition-all shadow-md active:scale-95">
-                                    <i class="fas fa-cart-plus text-sm"></i>
-                                </a>
-                            @endauth
-                        </div>
-                    </div>
-                </div>
+                @include('produtos.partials.card', ['produto' => $produto])
             @empty
-                <div class="text-center py-20 w-full">
-                    <i class="fas fa-search-minus text-6xl text-gray-200 mb-4"></i>
-                    <p class="text-gray-400 font-medium">Nenhum produto encontrado para sua busca.</p>
+                <div class="w-full">
+                    <div class="text-center pt-6 pb-10">
+                        <i class="fas fa-search-minus text-6xl text-gray-200 mb-4"></i>
+                        @if(request('search'))
+                            <p class="text-gray-500 font-medium">
+                                Nenhum produto encontrado para "<span class="font-bold text-gray-700">{{ request('search') }}</span>".
+                            </p>
+                        @else
+                            <p class="text-gray-400 font-medium">Nenhum produto encontrado.</p>
+                        @endif
+                    </div>
+
+                    @if(!empty($relacionados) && $relacionados->isNotEmpty())
+                        <div class="max-w-7xl mx-auto">
+                            <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter text-center mb-1">
+                                @if($tipoSugestao === 'relacionados')
+                                    <i class="fas fa-lightbulb text-amber-400 mr-1"></i> Produtos relacionados
+                                @else
+                                    <i class="fas fa-fire text-orange-500 mr-1"></i> Talvez você goste
+                                @endif
+                            </h2>
+                            <p class="text-center text-sm text-gray-400 mb-8">
+                                {{ $tipoSugestao === 'relacionados' ? 'Encontramos produtos parecidos com o que você procurou.' : 'Confira os produtos mais vendidos da loja.' }}
+                            </p>
+                            <div class="flex flex-wrap justify-center gap-8">
+                                @foreach($relacionados as $produto)
+                                    @include('produtos.partials.card', ['produto' => $produto])
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @endforelse
         </div>
@@ -183,6 +149,45 @@
     </div>
 
     <script>
+        document.querySelectorAll('.form-destaque').forEach(form => {
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const botao = this.querySelector('button');
+                botao.disabled = true;
+
+                try {
+                    const resposta = await fetch(this.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        },
+                    });
+                    const dados = await resposta.json();
+
+                    if (resposta.ok && dados.success) {
+                        const id = this.dataset.produto;
+                        botao.className = (dados.destaque ? 'text-amber-400 hover:text-amber-500' : 'text-gray-300 hover:text-amber-400') + ' transition';
+                        botao.title = dados.destaque ? 'Remover dos destaques' : 'Colocar em destaque';
+                        document.getElementById('selo-destaque-' + id)?.classList.toggle('hidden', !dados.destaque);
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: dados.message,
+                            showConfirmButton: false,
+                            timer: 1800,
+                        });
+                    }
+                } catch (erro) {
+                    console.error(erro);
+                }
+
+                botao.disabled = false;
+            });
+        });
+
         function confirmarExclusao(formId) {
             Swal.fire({
                 title: 'Tem certeza?',

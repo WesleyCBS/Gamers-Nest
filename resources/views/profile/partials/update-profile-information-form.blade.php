@@ -5,7 +5,7 @@
         </h2>
 
         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __("Atualize as informações de perfil, foto e endereço da sua conta.") }}
+            {{ strtolower($user->role) === 'admin' ? 'Atualize o nome, e-mail e foto da sua conta.' : 'Atualize as informações de perfil, foto e endereço da sua conta.' }}
         </p>
     </header>
 
@@ -43,6 +43,7 @@
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
         </div>
 
+        @if(strtolower($user->role) !== 'admin')
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <x-input-label for="cep" :value="__('CEP')" />
@@ -81,6 +82,7 @@
                 <x-input-error class="mt-2" :messages="$errors->get('uf')" />
             </div>
         </div>
+        @endif
 
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Salvar') }}</x-primary-button>
@@ -109,7 +111,7 @@
             }
         }
 
-        document.getElementById('cep').addEventListener('blur', function() {
+        document.getElementById('cep')?.addEventListener('blur', function() {
             let cep = this.value.replace(/\D/g, '');
 
             if (cep.length === 8) {

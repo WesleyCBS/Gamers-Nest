@@ -108,12 +108,12 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold uppercase text-gray-500 mb-1">CEP</label>
-                                <input type="text" name="cep" value="{{ old('cep', Auth::user()->cep ?? '') }}" 
-                                       class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                                <input type="text" name="cep" id="cep" value="{{ old('cep', Auth::user()->cep ?? '') }}" 
+                                       class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="00000-000" maxlength="9">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Rua / Logradouro</label>
-                                <input type="text" name="logradouro" value="{{ old('logradouro', Auth::user()->logradouro ?? '') }}" 
+                                <input type="text" name="logradouro" id="logradouro" value="{{ old('logradouro', Auth::user()->logradouro ?? '') }}" 
                                        class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
                             </div>
                         </div>
@@ -121,12 +121,12 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Número</label>
-                                <input type="text" name="numero" value="{{ old('numero', Auth::user()->numero ?? '') }}" 
+                                <input type="text" name="numero" id="numero" value="{{ old('numero', Auth::user()->numero ?? '') }}" 
                                        class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Bairro</label>
-                                <input type="text" name="bairro" value="{{ old('bairro', Auth::user()->bairro ?? '') }}" 
+                                <input type="text" name="bairro" id="bairro" value="{{ old('bairro', Auth::user()->bairro ?? '') }}" 
                                        class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
                             </div>
                         </div>
@@ -134,7 +134,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2">
                                 <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Cidade</label>
-                                <input type="text" name="cidade" value="{{ old('cidade', Auth::user()->cidade ?? '') }}" 
+                                <input type="text" name="cidade" id="cidade" value="{{ old('cidade', Auth::user()->cidade ?? '') }}" 
                                        class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
                             </div>
                         </div>
@@ -158,6 +158,7 @@
                     </div>
                 </div>
             </div>
+        </div>
     @else
         <div class="bg-white rounded-3xl p-20 text-center shadow-sm border border-dashed border-gray-200">
             <div class="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -171,4 +172,27 @@
         </div>
     @endif
 </div>
+
+{{-- Script para buscar o endereço automaticamente via ViaCEP --}}
+<script>
+document.getElementById('cep').addEventListener('blur', function() {
+    let cep = this.value.replace(/\D/g, '');
+
+    if (cep.length === 8) {
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.erro) {
+                    document.getElementById('logradouro').value = data.logradouro || '';
+                    document.getElementById('bairro').value = data.bairro || '';
+                    document.getElementById('cidade').value = data.localidade || '';
+                    document.getElementById('numero').focus();
+                } else {
+                    alert('CEP não encontrado.');
+                }
+            })
+            .catch(error => console.error('Erro ao buscar o CEP:', error));
+    }
+});
+</script>
 @endsection

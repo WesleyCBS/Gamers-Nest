@@ -43,22 +43,30 @@
                 </div>
 
                 <div class="mt-10 flex gap-4">
-                    {{-- FORMULÁRIO DE COMPRA --}}
-                    <form action="{{ route('checkout.iniciar', $produto->id) }}" method="POST" class="flex-grow">
-                        @csrf
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-all transform hover:scale-[1.02] shadow-xl flex items-center justify-center gap-3">
-                            <i class="fas fa-shopping-cart"></i>
-                            Comprar Agora
-                        </button>
-                    </form>
-                    
                     @auth
+                        <form action="{{ route('checkout.iniciar', $produto->id) }}" method="POST" class="flex-grow">
+                            @csrf
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-all transform hover:scale-[1.02] shadow-xl flex items-center justify-center gap-3">
+                                <i class="fas fa-shopping-cart"></i>
+                                Comprar Agora
+                            </button>
+                        </form>
+
                         <form action="{{ route('produtos.favorito', $produto->id) }}" method="POST">
                             @csrf
                             <button type="submit" class="p-5 bg-white border border-gray-200 rounded-2xl text-red-500 hover:bg-red-50 transition-colors shadow-sm">
                                 <i class="{{ Auth::user()->favoritos->contains($produto->id) ? 'fas' : 'far' }} fa-heart text-2xl"></i>
                             </button>
                         </form>
+                    @else
+                        <a href="{{ route('login') }}" class="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-all transform hover:scale-[1.02] shadow-xl flex items-center justify-center gap-3">
+                            <i class="fas fa-shopping-cart"></i>
+                            Comprar Agora
+                        </a>
+
+                        <a href="{{ route('login') }}" class="p-5 bg-white border border-gray-200 rounded-2xl text-red-500 hover:bg-red-50 transition-colors shadow-sm">
+                            <i class="far fa-heart text-2xl"></i>
+                        </a>
                     @endauth
                 </div>
             </div>

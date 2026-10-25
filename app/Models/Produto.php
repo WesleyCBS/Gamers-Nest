@@ -14,8 +14,17 @@ class Produto extends Model
         'preço',
         'quantidade',
         'categoria_id',
-        'imagem'
+        'imagem',
+        'destaque',
+        'ordem_destaque',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'destaque' => 'boolean',
+        ];
+    }
 
     // Relacionamento com Categoria
     public function categoria()

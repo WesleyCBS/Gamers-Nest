@@ -5,16 +5,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\CarrinhoController; 
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PedidoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\File;
 
 Route::get('/', [ProdutoController::class, 'index'])->name('produtos.index');
-
-Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
-Route::post('/carrinho/adicionar/{id}', [CarrinhoController::class, 'adicionar'])->name('carrinho.adicionar');
-Route::patch('/carrinho/atualizar/{id}', [CarrinhoController::class, 'atualizar'])->name('carrinho.atualizar');
-Route::delete('/carrinho/remover/{id}', [CarrinhoController::class, 'remover'])->name('carrinho.remover');
 
 Route::get('/categoria/{slug}', [ProdutoController::class, 'porCategoria'])->name('produtos.categoria');
 
@@ -23,24 +19,32 @@ Route::get('/produtos/{id}', [ProdutoController::class, 'show'])
     ->where('id', '[0-9]+');
 
 Route::middleware('auth')->group(function () {
-    
+    Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
+    Route::post('/carrinho/adicionar/{id}', [CarrinhoController::class, 'adicionar'])->name('carrinho.adicionar');
+    Route::patch('/carrinho/atualizar/{id}', [CarrinhoController::class, 'atualizar'])->name('carrinho.atualizar');
+    Route::delete('/carrinho/remover/{id}', [CarrinhoController::class, 'remover'])->name('carrinho.remover');
+
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    
     Route::post('/checkout/iniciar/{id}', [CheckoutController::class, 'iniciar'])->name('checkout.iniciar');
     Route::get('/checkout/endereco', [CheckoutController::class, 'enderecoForm'])->name('checkout.endereco');
     Route::post('/checkout/endereco', [CheckoutController::class, 'salvarEndereco'])->name('checkout.salvar_endereco');
     Route::get('/checkout/pagamento', [CheckoutController::class, 'pagamentoForm'])->name('checkout.pagamento');
     Route::post('/checkout/finalizar', [CheckoutController::class, 'finalizarCompra'])->name('checkout.finalizar');
 
+    Route::get('/checkout/sucesso', [CheckoutController::class, 'sucesso'])->name('checkout.sucesso');
+    Route::get('/checkout/status', [CheckoutController::class, 'statusPagamento'])->name('checkout.status');
+    Route::post('/checkout/simular', [CheckoutController::class, 'simularPagamento'])->name('checkout.simular');
+    Route::get('/checkout/boleto/pdf', [CheckoutController::class, 'boletoPdf'])->name('checkout.boleto.pdf');
+
     Route::post('/produtos/{id}/favorito', [ProdutoController::class, 'favorito'])->name('produtos.favorito');
     Route::get('/favoritos', [ProdutoController::class, 'favoritos'])->name('produtos.favoritos');
+    Route::get('/minhas-compras', [PedidoController::class, 'meus'])->name('pedidos.meus');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::middleware('admin')->group(function () {
-        
         Route::get('/dashboard', function () {
             return redirect()->route('produtos.index');
         })->name('dashboard');
@@ -48,6 +52,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/produtos/configuracoes', [CheckoutController::class, 'configuracoesForm'])->name('admin.configuracoes');
         Route::put('/produtos/configuracoes', [CheckoutController::class, 'salvarConfiguracoes'])->name('admin.configuracoes.update');
         Route::delete('/admin/configuracoes/banner/{index}', [CheckoutController::class, 'removerBanner'])->name('admin.banner.remover');
+
+        Route::get('/admin/pedidos', [PedidoController::class, 'admin'])->name('admin.pedidos');
+
+        Route::get('/admin/destaques', [ProdutoController::class, 'destaques'])->name('admin.destaques');
+        Route::post('/admin/destaques/{id}/mover/{direcao}', [ProdutoController::class, 'moverDestaque'])->name('admin.destaques.mover')->where('direcao', 'cima|baixo');
+        Route::post('/produtos/{id}/destaque', [ProdutoController::class, 'alternarDestaque'])->name('produtos.destaque');
 
         Route::get('/produtos/create', [ProdutoController::class, 'create'])->name('produtos.create');
         Route::post('/produtos', [ProdutoController::class, 'store'])->name('produtos.store');

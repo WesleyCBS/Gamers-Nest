@@ -18,7 +18,17 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-4 sm:pt-0 bg-white-100 dark:bg-white-900">
             <div>
                 <a href="/">
-                    <img src="{{ asset('img/gamersnestnovo.png') }}" alt="" style="width: 250px; height: 80px;"/> 
+                    @php
+                        $settingsPath = storage_path('app/settings.json');
+                        $settings = file_exists($settingsPath) ? json_decode(file_get_contents($settingsPath), true) : null;
+                        $logoLoja = $settings['logo'] ?? null;
+                    @endphp
+
+                    @if($logoLoja)
+                        <img src="{{ url('/storage/' . $logoLoja) . '?v=' . time() }}" alt="Logo da Loja" style="width: 250px; height: 80px; object-fit: contain;" />
+                    @else
+                        <img src="{{ asset('img/gamersnestnovo.png') }}" alt="Gamers Nest" style="width: 250px; height: 80px; object-fit: contain;" />
+                    @endif
                 </a>
             </div>
 
