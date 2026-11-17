@@ -20,17 +20,26 @@ class ProdutoController extends Controller
     {
         $query = Produto::with('categoria');
 
+        $idsEncontrados = collect();
+
         if ($request->has('search') && $request->search != '') {
-            $search = $request->input('search');
+            $search = trim($request->input('search'));
             $query->where(function($q) use ($search) {
                 $q->where('nome', 'LIKE', "%{$search}%")
                   ->orWhere('descrição', 'LIKE', "%{$search}%");
             });
+
+            $idsEncontrados = (clone $query)->pluck('id');
+
+            $query->orderByRaw(
+                'CASE WHEN nome = ? THEN 0 WHEN nome LIKE ? THEN 1 WHEN nome LIKE ? THEN 2 ELSE 3 END',
+                [$search, "{$search}%", "%{$search}%"]
+            );
         }
 
         $produtos = $query->orderByDesc('destaque')->orderBy('ordem_destaque')->orderBy('id')->paginate(10)->withQueryString();
         $categorias = Categoria::all(); 
-        [$relacionados, $tipoSugestao] = $this->sugestoes($request, $produtos);
+        [$relacionados, $tipoSugestao] = $this->sugestoes($request, $produtos, $idsEncontrados);
 
         return view('produtos.index', compact('produtos', 'categorias', 'relacionados', 'tipoSugestao'));
     }
@@ -41,27 +50,40 @@ class ProdutoController extends Controller
         
         $query = Produto::where('categoria_id', $categoriaAtiva->id);
 
+        $idsEncontrados = collect();
+
         if ($request->has('search') && $request->search != '') {
-            $search = $request->input('search');
+            $search = trim($request->input('search'));
             $query->where(function($q) use ($search) {
                 $q->where('nome', 'LIKE', "%{$search}%")
                   ->orWhere('descrição', 'LIKE', "%{$search}%");
             });
+
+            $idsEncontrados = (clone $query)->pluck('id');
+
+            $query->orderByRaw(
+                'CASE WHEN nome = ? THEN 0 WHEN nome LIKE ? THEN 1 WHEN nome LIKE ? THEN 2 ELSE 3 END',
+                [$search, "{$search}%", "%{$search}%"]
+            );
         }
         
         $produtos = $query->orderByDesc('destaque')->orderBy('ordem_destaque')->orderBy('id')->paginate(10)->withQueryString();
         $categorias = Categoria::all(); 
-        [$relacionados, $tipoSugestao] = $this->sugestoes($request, $produtos);
+        [$relacionados, $tipoSugestao] = $this->sugestoes($request, $produtos, $idsEncontrados);
 
         return view('produtos.index', compact('produtos', 'categorias', 'categoriaAtiva', 'relacionados', 'tipoSugestao'));
     }
 
-    private function sugestoes(Request $request, $produtos): array
+    private function sugestoes(Request $request, $produtos, Collection $idsEncontrados): array
     {
         $search = trim((string) $request->input('search'));
 
-        if ($search === '' || $produtos->total() > 0) {
+        if ($search === '') {
             return [collect(), null];
+        }
+
+        if ($produtos->total() > 0) {
+            return [$this->maisDaPesquisa($search, $idsEncontrados), 'mais'];
         }
 
         $relacionados = $this->produtosRelacionados($search);
@@ -70,6 +92,36 @@ class ProdutoController extends Controller
         }
 
         return [$this->maisVendidos(), 'populares'];
+    }
+
+    private function maisDaPesquisa(string $search, Collection $idsEncontrados, int $limite = 10): Collection
+    {
+        $lista = $this->produtosRelacionados($search, 20)
+            ->reject(fn ($p) => $idsEncontrados->contains($p->id));
+
+        $categorias = Produto::whereIn('id', $idsEncontrados)->pluck('categoria_id')->filter()->unique();
+
+        if ($categorias->isNotEmpty() && $lista->count() < $limite) {
+            $mesmaCategoria = Produto::with('categoria')
+                ->whereIn('categoria_id', $categorias)
+                ->whereNotIn('id', $idsEncontrados->merge($lista->pluck('id')))
+                ->orderByDesc('destaque')
+                ->orderBy('ordem_destaque')
+                ->orderBy('id')
+                ->limit($limite)
+                ->get();
+
+            $lista = $lista->concat($mesmaCategoria);
+        }
+
+        if ($lista->count() < $limite) {
+            $usados = $idsEncontrados->merge($lista->pluck('id'));
+            $lista  = $lista->concat(
+                $this->maisVendidos($limite * 2)->reject(fn ($p) => $usados->contains($p->id))
+            );
+        }
+
+        return $lista->unique('id')->take($limite)->values();
     }
 
     private function normalizar(?string $texto): string
@@ -233,7 +285,7 @@ class ProdutoController extends Controller
 
     public function show($id) 
     {
-        $produto = Produto::with('categoria')->findOrFail($id);
+        $produto = Produto::with(['categoria', 'imagens'])->findOrFail($id);
         return view('produtos.show', compact('produto'));
     }
 
@@ -251,21 +303,29 @@ class ProdutoController extends Controller
             'preço' => 'required|numeric',
             'quantidade' => 'required|integer',
             'categoria_id' => 'required|exists:categorias,id',
-            'imagem' => 'required|image|max:2048',
-        ]);
+            'imagens' => 'required|array|min:1|max:5',
+            'imagens.*' => 'image|max:2048',
+        ], $this->mensagensFotos());
 
-        if ($request->hasFile('imagem')) {
-            $path = $request->file('imagem')->store('products', 'public');
-            $data['imagem'] = $path; 
+        $fotos = $request->file('imagens');
+        unset($data['imagens']);
+
+        $data['imagem'] = $fotos[0]->store('products', 'public');
+        $produto = Produto::create($data);
+
+        foreach (array_slice($fotos, 1) as $indice => $foto) {
+            $produto->imagens()->create([
+                'caminho' => $foto->store('products', 'public'),
+                'ordem'   => $indice + 1,
+            ]);
         }
 
-        Produto::create($data);
         return redirect()->route('produtos.index')->with('success', 'Produto cadastrado com sucesso!');
     }
 
     public function edit($id) 
     {
-        $produto = Produto::findOrFail($id);
+        $produto = Produto::with('imagens')->findOrFail($id);
         $categorias = Categoria::all();
         return view('produtos.edit', compact('produto', 'categorias'));
     }
@@ -281,7 +341,36 @@ class ProdutoController extends Controller
             'quantidade' => 'required|integer',
             'categoria_id' => 'required|exists:categorias,id',
             'imagem' => 'nullable|image|max:2048',
-        ]);
+            'imagens' => 'nullable|array|max:4',
+            'imagens.*' => 'image|max:2048',
+            'remover_imagens' => 'nullable|array',
+            'remover_imagens.*' => 'integer',
+        ], $this->mensagensFotos());
+
+        $remover   = $produto->imagens()->whereIn('id', $request->input('remover_imagens', []))->get();
+        $novas     = $request->file('imagens', []);
+        $restantes = $produto->imagens()->count() - $remover->count();
+
+        if ($restantes + count($novas) > 4) {
+            return redirect()->back()->withInput()->withErrors([
+                'imagens' => 'O produto pode ter no máximo 5 fotos (a capa + 4 extras).',
+            ]);
+        }
+
+        foreach ($remover as $foto) {
+            Storage::disk('public')->delete($foto->caminho);
+            $foto->delete();
+        }
+
+        $ordem = (int) $produto->imagens()->max('ordem');
+        foreach ($novas as $foto) {
+            $produto->imagens()->create([
+                'caminho' => $foto->store('products', 'public'),
+                'ordem'   => ++$ordem,
+            ]);
+        }
+
+        unset($data['imagens'], $data['remover_imagens']);
 
         if ($request->hasFile('imagem')) {
             if ($produto->imagem && Storage::disk('public')->exists($produto->imagem)) {
@@ -297,14 +386,28 @@ class ProdutoController extends Controller
 
     public function destroy($id)
     {
-        $produto = Produto::findOrFail($id);
+        $produto = Produto::with('imagens')->findOrFail($id);
         
         if ($produto->imagem && Storage::disk('public')->exists($produto->imagem)) {
             Storage::disk('public')->delete($produto->imagem);
         }
 
+        foreach ($produto->imagens as $foto) {
+            Storage::disk('public')->delete($foto->caminho);
+        }
+
         $produto->delete();
         return redirect()->route('produtos.index')->with('success', 'Produto removido!');
+    }
+
+    private function mensagensFotos(): array
+    {
+        return [
+            'imagens.required' => 'Escolha pelo menos uma foto.',
+            'imagens.max'      => 'Você pode enviar no máximo 5 fotos.',
+            'imagens.*.image'  => 'Todos os arquivos precisam ser imagens.',
+            'imagens.*.max'    => 'Cada foto pode ter no máximo 2 MB.',
+        ];
     }
 
     public function favorito(Request $request, $id)

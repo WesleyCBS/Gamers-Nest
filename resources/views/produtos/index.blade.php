@@ -10,7 +10,7 @@
             $bannersList = $configApp['banners'] ?? [];
         @endphp
 
-        @if(count($bannersList) > 0)
+        @if(count($bannersList) > 0 && !request()->filled('search'))
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
                 <div class="relative rounded-3xl overflow-hidden shadow-xl bg-gray-900 w-full aspect-[3/1]" 
                      x-data="{ 
@@ -57,6 +57,17 @@
             </div>
         @endif
 
+        @if(request()->filled('search'))
+            <div class="text-center mb-8 px-4">
+                <h1 class="text-3xl font-black my-2 uppercase tracking-tighter text-gray-800">
+                    Resultados para "<span class="text-indigo-600">{{ request('search') }}</span>"
+                </h1>
+                <p class="text-gray-500 font-medium">
+                    {{ $produtos->total() }} {{ $produtos->total() === 1 ? 'produto encontrado' : 'produtos encontrados' }}
+                    · <a href="{{ isset($categoriaAtiva) ? route('produtos.categoria', $categoriaAtiva->slug) : route('produtos.index') }}" class="text-indigo-600 font-bold hover:underline">Limpar busca</a>
+                </p>
+            </div>
+        @else
         @auth
             @if (strtolower(Auth::user()->role) === 'admin')
                 <h1 class="text-3xl font-black my-2 text-center uppercase tracking-tighter text-gray-800">Gerenciamento de Catálogo</h1>
@@ -69,6 +80,7 @@
             <h1 class="text-3xl font-black my-2 text-center uppercase tracking-tighter text-gray-800">Produtos Disponíveis</h1>
             <p class="text-center mb-8 text-gray-500 font-medium tracking-tight">Faça login para salvar seus favoritos!</p>
         @endauth
+        @endif
 
         <div class="max-w-7xl mx-auto px-7 mb-10">
             <div class="flex flex-wrap justify-center gap-3">
@@ -146,6 +158,20 @@
         <div class="mt-10 px-7 mb-10">
             {{ $produtos->appends(['search' => request('search')])->links() }}
         </div>
+
+        @if($produtos->count() && ($tipoSugestao ?? null) === 'mais' && $relacionados->isNotEmpty())
+            <div class="max-w-7xl mx-auto px-7 pt-10 mb-16 border-t border-gray-200">
+                <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter text-center mb-1">
+                    <i class="fas fa-gamepad text-indigo-500 mr-1"></i> Você também pode gostar
+                </h2>
+                <p class="text-center text-sm text-gray-400 mb-8">Outros produtos parecidos com "{{ request('search') }}".</p>
+                <div class="flex flex-wrap justify-center gap-8">
+                    @foreach($relacionados as $produto)
+                        @include('produtos.partials.card', ['produto' => $produto])
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </div>
 
     <script>

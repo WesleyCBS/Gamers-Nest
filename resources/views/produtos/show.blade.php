@@ -10,10 +10,23 @@
 
         <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100">
             
-            <div class="md:w-1/2 p-10 bg-white flex items-center justify-center">
-                <img src="{{ Storage::url(str_replace('storage/', '', $produto->imagem)) }}" 
+            @php $galeria = $produto->galeria; @endphp
+            <div class="md:w-1/2 p-10 bg-white flex flex-col items-center justify-center gap-6" x-data="{ atual: @js($galeria[0] ?? '') }">
+                <img src="{{ $galeria[0] ?? '' }}" :src="atual"
                      alt="{{ $produto->nome }}" 
                      class="max-h-[450px] w-full object-contain hover:scale-105 transition-transform duration-500">
+
+                @if(count($galeria) > 1)
+                    <div class="flex flex-wrap justify-center gap-3">
+                        @foreach($galeria as $url)
+                            <button type="button" @click="atual = @js($url)"
+                                    :class="atual === @js($url) ? 'ring-2 ring-indigo-500 opacity-100' : 'opacity-60 hover:opacity-100'"
+                                    class="w-16 h-16 rounded-xl border border-gray-200 bg-white p-1 transition">
+                                <img src="{{ $url }}" alt="Foto {{ $loop->iteration }} de {{ $produto->nome }}" class="w-full h-full object-contain">
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
             <div class="md:w-1/2 p-12 bg-gray-50 flex flex-col">

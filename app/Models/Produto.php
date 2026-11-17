@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Produto extends Model
 {
@@ -30,6 +31,18 @@ class Produto extends Model
     public function categoria()
     {
         return $this->belongsTo(Categoria::class);
+    }
+
+    public function imagens()
+    {
+        return $this->hasMany(ProdutoImagem::class)->orderBy('ordem')->orderBy('id');
+    }
+
+    public function getGaleriaAttribute(): array
+    {
+        $capa = $this->imagem ? [Storage::url(str_replace('storage/', '', $this->imagem))] : [];
+
+        return array_merge($capa, $this->imagens->map(fn ($img) => $img->url)->all());
     }
 
     public function favoritadoPor()
