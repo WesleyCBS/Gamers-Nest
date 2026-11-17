@@ -14,6 +14,8 @@ use Illuminate\Support\Collection;
 
 class ProdutoController extends Controller
 {
+    private const LIMITE_DESTAQUES = 10;
+
     public function index(Request $request)
     {
         $query = Produto::with('categoria');
@@ -163,6 +165,16 @@ class ProdutoController extends Controller
             $this->reordenarDestaques();
             $mensagem = 'Produto removido dos destaques.';
         } else {
+            if (Produto::where('destaque', true)->count() >= self::LIMITE_DESTAQUES) {
+                $erro = 'Limite de ' . self::LIMITE_DESTAQUES . ' destaques atingido. Remova um antes de adicionar outro.';
+
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $erro], 422);
+                }
+
+                return redirect()->back()->with('error', $erro);
+            }
+
             $proxima = (int) Produto::where('destaque', true)->max('ordem_destaque') + 1;
             $produto->update(['destaque' => true, 'ordem_destaque' => $proxima]);
             $mensagem = 'Produto adicionado aos destaques!';
@@ -184,7 +196,9 @@ class ProdutoController extends Controller
         $destaques = Produto::with('categoria')->where('destaque', true)->orderBy('ordem_destaque')->get();
         $outros    = Produto::with('categoria')->where('destaque', false)->orderBy('nome')->get();
 
-        return view('admin.destaques', compact('destaques', 'outros'));
+        $limite = self::LIMITE_DESTAQUES;
+
+        return view('admin.destaques', compact('destaques', 'outros', 'limite'));
     }
 
     public function moverDestaque($id, $direcao)

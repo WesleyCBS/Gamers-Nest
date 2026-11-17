@@ -43,8 +43,14 @@
                             <x-nav-link :href="route('produtos.create')" :active="request()->routeIs('produtos.create')" class="!text-green-400 font-black !border-none">
                                 <i class="fas fa-plus-square mr-1.5"></i> Produto
                             </x-nav-link>
+                            @php $cancelamentosPendentes = \App\Models\Pedido::aConfirmar()->count() + \App\Models\Pedido::cancelamentoSolicitado()->count(); @endphp
                             <x-nav-link :href="route('admin.pedidos')" :active="request()->routeIs('admin.pedidos')" class="!text-amber-400 font-black !border-none">
                                 <i class="fas fa-chart-line mr-1.5"></i> Vendas
+                                @if($cancelamentosPendentes > 0)
+                                    <span class="ml-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 min-w-[1rem] px-1 inline-flex items-center justify-center" title="Vendas a confirmar e cancelamentos aguardando análise">
+                                        {{ $cancelamentosPendentes }}
+                                    </span>
+                                @endif
                             </x-nav-link>
                         @endif
                     @endauth

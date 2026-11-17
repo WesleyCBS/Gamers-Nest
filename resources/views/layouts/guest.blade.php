@@ -7,32 +7,21 @@
 
         <title>{{ config('app.name', 'Game Nest') }}</title>
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 
-        <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-4 sm:pt-0 bg-white-100 dark:bg-white-900">
-            <div>
-                <a href="/">
-                    @php
-                        $settingsPath = storage_path('app/settings.json');
-                        $settings = file_exists($settingsPath) ? json_decode(file_get_contents($settingsPath), true) : null;
-                        $logoLoja = $settings['logo'] ?? null;
-                    @endphp
-
-                    @if($logoLoja)
-                        <img src="{{ url('/storage/' . $logoLoja) . '?v=' . time() }}" alt="Logo da Loja" style="width: 250px; height: 80px; object-fit: contain;" />
-                    @else
-                        <img src="{{ asset('img/gamersnestnovo.png') }}" alt="Gamers Nest" style="width: 250px; height: 80px; object-fit: contain;" />
-                    @endif
+    <body class="font-sans text-gray-900 antialiased" style="background-color: #0d1934;">
+        <div class="min-h-screen flex flex-col justify-center items-center px-4 py-10" style="background-color: #0d1934;">
+            <div class="mb-6">
+                                <a href="/" class="block text-center" style="font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 2.5rem; letter-spacing: 0.15em; color: #38bdf8; text-shadow: 0 0 12px rgba(56,189,248,0.7), 0 0 30px rgba(56,189,248,0.35);">
+                    GAMERS NEST
                 </a>
             </div>
 
-            <div class="w-full sm:max-w-md px-6 py-3 light:bg-gray-600 shadow-md overflow-hidden sm:rounded-lg">
+            <div class="w-full sm:max-w-md bg-white px-8 py-8 shadow-2xl rounded-2xl">
                 {{ $slot }}
             </div>
         </div>

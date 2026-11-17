@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
  
@@ -55,6 +56,15 @@ class CheckoutController extends Controller
     {
         $produto = Produto::findOrFail($id);
         $carrinho = session()->get('carrinho', []);
+        $noCarrinho = $carrinho[$id]['quantidade'] ?? 0;
+
+        if ($produto->quantidade <= 0) {
+            return redirect()->back()->with('error', 'Produto esgotado.');
+        }
+
+        if ($noCarrinho >= $produto->quantidade) {
+            return redirect()->route('carrinho.index')->with('error', "Só temos {$produto->quantidade} unidade(s) de {$produto->nome} em estoque.");
+        }
  
         if(isset($carrinho[$id])) {
             $carrinho[$id]['quantidade']++;
@@ -194,6 +204,10 @@ class CheckoutController extends Controller
         if (empty($carrinho)) {
             return response()->json(['success' => false, 'message' => 'Carrinho vazio.'], 400);
         }
+
+        if ($erroEstoque = $this->verificarEstoque($carrinho)) {
+            return response()->json(['success' => false, 'message' => $erroEstoque], 400);
+        }
  
         $amount = $this->totalCentavos($carrinho);
         if ($amount < 100) {
@@ -273,29 +287,37 @@ class CheckoutController extends Controller
     {
         $endereco = session('checkout_endereco');
 
-        $pedido = Pedido::create([
-            'codigo'          => $pedidoId,
-            'user_id'         => Auth::id(),
-            'metodo'          => $metodo,
-            'status'          => $cobranca['status'] ?? 'PENDING',
-            'total'           => $amount,
-            'parcelas'        => $cobranca['installmentCount'] ?? null,
-            'cartao_bandeira' => $cobranca['brand'] ?? null,
-            'cartao_final'    => $cobranca['lastFour'] ?? null,
-            'gateway_id'      => $cobranca['id'] ?? null,
-            'cliente'         => $customer,
-            'endereco'        => $endereco,
-        ]);
-
-        foreach ($carrinho as $produtoId => $item) {
-            $pedido->itens()->create([
-                'produto_id' => Produto::whereKey($produtoId)->exists() ? $produtoId : null,
-                'nome'       => $item['nome'],
-                'preco'      => $item['preço'],
-                'quantidade' => $item['quantidade'],
-                'imagem'     => $item['imagem'] ?? null,
+        DB::transaction(function () use ($cobranca, $metodo, $carrinho, $amount, $customer, $pedidoId, $endereco) {
+            $pedido = Pedido::create([
+                'codigo'          => $pedidoId,
+                'user_id'         => Auth::id(),
+                'metodo'          => $metodo,
+                'status'          => $cobranca['status'] ?? 'PENDING',
+                'total'           => $amount,
+                'parcelas'        => $cobranca['installmentCount'] ?? null,
+                'cartao_bandeira' => $cobranca['brand'] ?? null,
+                'cartao_final'    => $cobranca['lastFour'] ?? null,
+                'gateway_id'      => $cobranca['id'] ?? null,
+                'cobranca'        => $cobranca,
+                'estoque_reservado' => true,
+                'cliente'         => $customer,
+                'endereco'        => $endereco,
             ]);
-        }
+
+            foreach ($carrinho as $produtoId => $item) {
+                $pedido->itens()->create([
+                    'produto_id' => Produto::whereKey($produtoId)->exists() ? $produtoId : null,
+                    'nome'       => $item['nome'],
+                    'preco'      => $item['preço'],
+                    'quantidade' => $item['quantidade'],
+                    'imagem'     => $item['imagem'] ?? null,
+                ]);
+
+                Produto::whereKey($produtoId)->update([
+                    'quantidade' => DB::raw('GREATEST(quantidade - ' . (int) $item['quantidade'] . ', 0)'),
+                ]);
+            }
+        });
 
         session()->put('ultima_cobranca', $cobranca);
         session()->put('metodo_escolhido', $metodo);
@@ -411,9 +433,46 @@ class CheckoutController extends Controller
  
     private function atualizarStatusPedido(array $cobranca): void
     {
-        if (!empty($cobranca['id']) && !empty($cobranca['status'])) {
-            Pedido::where('gateway_id', $cobranca['id'])->update(['status' => $cobranca['status']]);
+        if (empty($cobranca['id']) || empty($cobranca['status'])) {
+            return;
         }
+
+        $pedido = Pedido::with('itens')->where('gateway_id', $cobranca['id'])->first();
+        if (!$pedido || $pedido->status === $cobranca['status']) {
+            return;
+        }
+
+        $cancelados = ['EXPIRED', 'CANCELLED', 'FAILED', 'REFUNDED'];
+        $devolverEstoque = in_array($cobranca['status'], $cancelados) && !in_array($pedido->status, $cancelados);
+
+        DB::transaction(function () use ($pedido, $cobranca, $devolverEstoque) {
+            $pedido->update(['status' => $cobranca['status']]);
+
+            if ($devolverEstoque) {
+                $pedido->devolverEstoque();
+            }
+        });
+    }
+
+    private function verificarEstoque(array $carrinho): ?string
+    {
+        foreach ($carrinho as $produtoId => $item) {
+            $produto = Produto::find($produtoId);
+
+            if (!$produto) {
+                return "O produto {$item['nome']} não está mais disponível. Remova-o do carrinho.";
+            }
+
+            if ($produto->quantidade <= 0) {
+                return "{$produto->nome} esgotou. Remova-o do carrinho para continuar.";
+            }
+
+            if ($item['quantidade'] > $produto->quantidade) {
+                return "Só temos {$produto->quantidade} unidade(s) de {$produto->nome} em estoque. Ajuste a quantidade no carrinho.";
+            }
+        }
+
+        return null;
     }
 
     public function statusPagamento()

@@ -12,6 +12,12 @@
     </div>
     <p class="text-gray-500 mb-8">Os produtos em destaque aparecem primeiro na tela inicial, na ordem abaixo.</p>
 
+    @if(session('error'))
+        <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-4 mb-6">
+            <i class="fas fa-exclamation-circle mr-1"></i> {{ session('error') }}
+        </div>
+    @endif
+
     @if(session('success'))
         <div class="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-4 mb-6">
             <i class="fas fa-check-circle mr-1"></i> {{ session('success') }}
@@ -21,7 +27,7 @@
     <div class="bg-white shadow-xl rounded-3xl border border-gray-100 overflow-hidden mb-10">
         <div class="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
             <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Ordem na tela inicial</span>
-            <span class="text-xs font-bold text-amber-500">{{ $destaques->count() }} {{ $destaques->count() === 1 ? 'destaque' : 'destaques' }}</span>
+            <span class="text-xs font-bold {{ $destaques->count() >= $limite ? 'text-red-500' : 'text-amber-500' }}">{{ $destaques->count() }} / {{ $limite }} destaques</span>
         </div>
 
         @forelse($destaques as $produto)
@@ -83,7 +89,7 @@
                     </div>
                     <form action="{{ route('produtos.destaque', $produto->id) }}" method="POST" class="shrink-0" data-manter-scroll>
                         @csrf
-                        <button type="submit" class="w-9 h-9 rounded-xl bg-amber-50 text-amber-500 hover:bg-amber-400 hover:text-white transition" title="Colocar em destaque">
+                        <button type="submit" @disabled($destaques->count() >= $limite) class="w-9 h-9 rounded-xl bg-amber-50 text-amber-500 hover:bg-amber-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition" title="{{ $destaques->count() >= $limite ? 'Limite de destaques atingido' : 'Colocar em destaque' }}">
                             <i class="fas fa-star text-sm"></i>
                         </button>
                     </form>

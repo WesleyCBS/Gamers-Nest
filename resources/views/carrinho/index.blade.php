@@ -39,48 +39,64 @@
                             <td class="px-6 py-6 text-gray-600 font-medium">
                                 R$ {{ number_format($detalhes['preço'], 2, ',', '.') }}
                             </td>
-                            <td class="px-6 py-6 text-center" x-data="{ quantidade: {{ $detalhes['quantidade'] }} }">
-                                <div class="inline-flex items-center space-x-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100">
-                                    <button type="button" 
-                                        @click="
-                                            if (quantidade > 1) {
-                                                quantidade--;
-                                                fetch('{{ route('carrinho.atualizar', $id) }}', {
-                                                    method: 'PATCH',
-                                                    headers: {
-                                                        'Content-Type': 'application/json',
-                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                                    },
-                                                    body: JSON.stringify({ acao: 'menos' })
-                                                }).then(() => window.location.reload());
-                                            } else {
-                                                window.location.href = '{{ route('carrinho.atualizar', $id) }}?acao=menos';
+                            <td class="px-6 py-6 text-center"
+                                x-data="{
+                                    quantidade: {{ $detalhes['quantidade'] }},
+                                    estoque: {{ $detalhes['estoque'] ?? 9999 }},
+                                    carregando: false,
+                                    async alterar(acao) {
+                                        if (this.carregando) return;
+                                        if (acao === 'mais' && this.quantidade >= this.estoque) return;
+                                        this.carregando = true;
+                                        try {
+                                            const resposta = await fetch('{{ route('carrinho.atualizar', $id) }}', {
+                                                method: 'PATCH',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Accept': 'application/json',
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                },
+                                                body: JSON.stringify({ acao: acao })
+                                            });
+                                            const dados = await resposta.json();
+                                            if (!resposta.ok || !dados.success) {
+                                                Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: dados.message || 'Não foi possível atualizar.', showConfirmButton: false, timer: 2500 });
+                                                return;
                                             }
-                                        "
+                                            if (dados.removido) {
+                                                window.location.reload();
+                                                return;
+                                            }
+                                            this.quantidade = dados.quantidade;
+                                            document.getElementById('subtotal-{{ $id }}').textContent = dados.subtotal;
+                                            document.getElementById('total-carrinho').textContent = dados.total;
+                                            document.getElementById('total-hidden').value = dados.totalValor;
+                                        } finally {
+                                            this.carregando = false;
+                                        }
+                                    }
+                                }">
+                                <div class="inline-flex items-center space-x-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100">
+                                    <button type="button" @click="alterar('menos')" :disabled="carregando"
+                                        :title="quantidade <= 1 ? 'Remover do carrinho' : ''"
                                         class="w-7 h-7 bg-white text-gray-700 rounded-lg shadow-sm flex items-center justify-center hover:bg-gray-100 font-bold transition-all">
                                         -
                                     </button>
                                     <span class="w-8 text-center font-black text-gray-800" x-text="quantidade">
                                         {{ $detalhes['quantidade'] }}
                                     </span>
-                                    <button type="button" 
-                                        @click="
-                                            quantidade++;
-                                            fetch('{{ route('carrinho.atualizar', $id) }}', {
-                                                method: 'PATCH',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                                },
-                                                body: JSON.stringify({ acao: 'mais' })
-                                            }).then(() => window.location.reload());
-                                        "
-                                        class="w-7 h-7 bg-white text-gray-700 rounded-lg shadow-sm flex items-center justify-center hover:bg-gray-100 font-bold transition-all">
+                                    <button type="button" @click="alterar('mais')"
+                                        :disabled="carregando || quantidade >= estoque"
+                                        :title="quantidade >= estoque ? 'Estoque máximo atingido' : ''"
+                                        class="w-7 h-7 bg-white text-gray-700 rounded-lg shadow-sm flex items-center justify-center hover:bg-gray-100 font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed">
                                         +
                                     </button>
                                 </div>
+                                <p x-show="estoque <= 5" class="text-[10px] font-bold uppercase tracking-wider text-amber-500 mt-1.5">
+                                    Restam {{ $detalhes['estoque'] ?? '' }} em estoque
+                                </p>
                             </td>
-                            <td class="px-6 py-6 text-indigo-600 font-black text-lg">
+                            <td id="subtotal-{{ $id }}" class="px-6 py-6 text-indigo-600 font-black text-lg">
                                 R$ {{ number_format($subtotal, 2, ',', '.') }}
                             </td>
                             <td class="px-6 py-6 text-center">
@@ -139,7 +155,7 @@
                             </div>
                         </div>
 
-                        <input type="hidden" name="total" value="{{ $total }}">
+                        <input type="hidden" name="total" id="total-hidden" value="{{ $total }}">
 
                         <div class="pt-4">
                             <button type="submit" class="w-full bg-green-500 text-white px-12 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-green-600 transition-all shadow-lg shadow-green-200 text-center cursor-pointer">
@@ -152,7 +168,7 @@
                 <div class="flex flex-col justify-between border-t md:border-t-0 md:border-l border-gray-200 md:pl-8 pt-6 md:pt-0">
                     <div>
                         <span class="text-gray-500 block uppercase text-xs font-bold tracking-widest mb-1">Resumo do Pedido</span>
-                        <span class="text-3xl font-black text-gray-900 tracking-tighter block mb-6">
+                        <span id="total-carrinho" class="text-3xl font-black text-gray-900 tracking-tighter block mb-6">
                             R$ {{ number_format($total, 2, ',', '.') }}
                         </span>
                     </div>

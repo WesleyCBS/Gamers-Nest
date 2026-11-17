@@ -39,6 +39,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/produtos/{id}/favorito', [ProdutoController::class, 'favorito'])->name('produtos.favorito');
     Route::get('/favoritos', [ProdutoController::class, 'favoritos'])->name('produtos.favoritos');
     Route::get('/minhas-compras', [PedidoController::class, 'meus'])->name('pedidos.meus');
+    Route::get('/minhas-compras/{id}/pagar', [PedidoController::class, 'pagar'])->name('pedidos.pagar');
+    Route::post('/minhas-compras/{id}/cancelar', [PedidoController::class, 'cancelar'])->name('pedidos.cancelar');
+    Route::post('/minhas-compras/{id}/solicitar-cancelamento', [PedidoController::class, 'solicitarCancelamento'])->name('pedidos.solicitar-cancelamento');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -54,6 +57,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/admin/configuracoes/banner/{index}', [CheckoutController::class, 'removerBanner'])->name('admin.banner.remover');
 
         Route::get('/admin/pedidos', [PedidoController::class, 'admin'])->name('admin.pedidos');
+        Route::post('/admin/pedidos/{id}/cancelamento', [PedidoController::class, 'responderCancelamento'])->name('admin.pedidos.cancelamento');
+        Route::get('/admin/pedidos/{id}/etiqueta', [PedidoController::class, 'etiqueta'])->name('admin.pedidos.etiqueta');
+        Route::post('/admin/pedidos/{id}/confirmar', [PedidoController::class, 'confirmar'])->name('admin.pedidos.confirmar');
+        Route::post('/admin/pedidos/{id}/cancelar', [PedidoController::class, 'cancelarAdmin'])->name('admin.pedidos.cancelar');
 
         Route::get('/admin/destaques', [ProdutoController::class, 'destaques'])->name('admin.destaques');
         Route::post('/admin/destaques/{id}/mover/{direcao}', [ProdutoController::class, 'moverDestaque'])->name('admin.destaques.mover')->where('direcao', 'cima|baixo');

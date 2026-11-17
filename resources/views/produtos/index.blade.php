@@ -149,6 +149,25 @@
     </div>
 
     <script>
+        (function () {
+            try {
+                if (sessionStorage.getItem('catalogo-voltar') === '1' && sessionStorage.getItem('catalogo-url') === window.location.href) {
+                    const posicao = parseInt(sessionStorage.getItem('catalogo-scroll') || '0', 10);
+                    sessionStorage.removeItem('catalogo-voltar');
+                    window.scrollTo(0, posicao);
+                    window.addEventListener('load', () => window.scrollTo(0, posicao));
+                }
+                sessionStorage.removeItem('catalogo-voltar');
+            } catch (e) {}
+
+            window.addEventListener('pagehide', () => {
+                try {
+                    sessionStorage.setItem('catalogo-url', window.location.href);
+                    sessionStorage.setItem('catalogo-scroll', window.scrollY);
+                } catch (e) {}
+            });
+        })();
+
         document.querySelectorAll('.form-destaque').forEach(form => {
             form.addEventListener('submit', async function (e) {
                 e.preventDefault();
@@ -178,6 +197,15 @@
                             title: dados.message,
                             showConfirmButton: false,
                             timer: 1800,
+                        });
+                    } else {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'warning',
+                            title: dados.message || 'Não foi possível alterar o destaque.',
+                            showConfirmButton: false,
+                            timer: 2500,
                         });
                     }
                 } catch (erro) {

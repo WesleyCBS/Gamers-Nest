@@ -27,5 +27,20 @@
                 @yield('slot')
             </main>
         </div>
+
+        @if(session('error') && !request()->routeIs('admin.destaques'))
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'warning',
+                        title: @json(session('error')),
+                        showConfirmButton: false,
+                        timer: 3500,
+                    });
+                });
+            </script>
+        @endif
     </body>
 </html>

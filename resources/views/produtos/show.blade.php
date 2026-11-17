@@ -4,7 +4,7 @@
 <div class="py-12 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <a href="{{ route('produtos.index') }}" class="inline-flex items-center text-gray-500 hover:text-indigo-600 mb-8 font-bold transition-colors">
+        <a href="{{ route('produtos.index') }}" onclick="return voltarAoCatalogo()" class="inline-flex items-center text-gray-500 hover:text-indigo-600 mb-8 font-bold transition-colors">
             <i class="fas fa-arrow-left mr-2"></i> Voltar ao Catálogo
         </a>
 
@@ -73,4 +73,17 @@
         </div>
     </div>
 </div>
+<script>
+    function voltarAoCatalogo() {
+        try {
+            const endereco = sessionStorage.getItem('catalogo-url');
+            if (endereco) {
+                sessionStorage.setItem('catalogo-voltar', '1');
+                window.location.href = endereco;
+                return false;
+            }
+        } catch (e) {}
+        return true;
+    }
+</script>
 @endsection

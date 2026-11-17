@@ -1,4 +1,10 @@
 <section id="historico-compras">
+    @if(session('success'))
+        <div class="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-4 mb-6">
+            <i class="fas fa-check-circle mr-1"></i> {{ session('success') }}
+        </div>
+    @endif
+
     <header class="flex items-center justify-between mb-6">
         <div>
             <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -62,6 +68,26 @@
                     </div>
                 @endforeach
 
+                @if($pedido->pode_pagar)
+                    <a href="{{ route('pedidos.pagar', $pedido->id) }}"
+                       class="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-xl shadow-md transition">
+                        <i class="fas {{ $pedido->metodo === 'pix' ? 'fa-qrcode' : 'fa-barcode' }}"></i>
+                        {{ $pedido->metodo === 'pix' ? 'Pagar com PIX' : 'Ver boleto' }}
+                    </a>
+                @endif
+
+                @if($pedido->pode_cancelar)
+                    <form action="{{ route('pedidos.cancelar', $pedido->id) }}" method="POST">
+                        @csrf
+                        <button type="button" onclick="cancelarPedido(this.form, '{{ $pedido->codigo }}')"
+                                class="flex items-center justify-center gap-2 w-full border-2 border-red-200 text-red-500 hover:bg-red-500 hover:border-red-500 hover:text-white text-xs font-bold uppercase tracking-widest py-2.5 rounded-xl transition">
+                            <i class="fas fa-times"></i> Cancelar pedido
+                        </button>
+                    </form>
+                @endif
+
+                @include('pedidos.partials.cancelamento-comprador')
+
                 <div class="pt-3 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-500">
                     @if($pedido->endereco)
                         <div>
@@ -91,3 +117,42 @@
         </div>
     @endforelse
 </section>
+
+<script>
+    function cancelarPedido(form, codigo) {
+        Swal.fire({
+            title: 'Cancelar pedido?',
+            text: 'O pedido ' + codigo + ' será cancelado e não poderá mais ser pago.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sim, cancelar',
+            cancelButtonText: 'Voltar',
+        }).then((resultado) => {
+            if (resultado.isConfirmed) {
+                form.submit();
+            }
+        });
+    }
+    function solicitarCancelamento(form, codigo) {
+        Swal.fire({
+            title: 'Solicitar cancelamento?',
+            text: 'O pedido ' + codigo + ' já foi pago. A loja vai analisar e, se aprovar, o valor será reembolsado.',
+            icon: 'question',
+            input: 'textarea',
+            inputPlaceholder: 'Conte o motivo do cancelamento (opcional)',
+            inputAttributes: { maxlength: 500 },
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Enviar solicitação',
+            cancelButtonText: 'Voltar',
+        }).then((resultado) => {
+            if (resultado.isConfirmed) {
+                form.querySelector('input[name="motivo"]').value = resultado.value || '';
+                form.submit();
+            }
+        });
+    }
+</script>

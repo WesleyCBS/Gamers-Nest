@@ -40,14 +40,17 @@
             <x-input-error :messages="$errors->get('role')" class="mt-2" />
         </div>  --}}
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="ml-4">
+        <div class="mt-6">
+            <x-primary-button class="w-full justify-center py-3 bg-[#0b1d3a] hover:bg-[#13305e] focus:bg-[#13305e] active:bg-[#081428]">
                 {{ __('Register') }}
             </x-primary-button>
+        
+            <p class="mt-4 text-center text-sm text-gray-600">
+                Já tem uma conta?
+                <a href="{{ route('login') }}" class="font-semibold text-[#1a6fd1] hover:underline">
+                    Entrar
+                </a>
+            </p>
         </div>
     </form>
 </x-guest-layout>
