@@ -1,3 +1,4 @@
+@php $ehAdmin = Auth::check() && strtolower(Auth::user()->role) === 'admin'; @endphp
 <div class="bg-white shadow-xl rounded-3xl overflow-hidden w-64 flex flex-col h-[450px] transition-transform hover:scale-105 border border-gray-100 relative group">
     <a href="{{ route('produtos.show', $produto->id) }}" class="absolute inset-0 z-10" title="Ver {{ $produto->nome }}"></a>
 
@@ -7,7 +8,16 @@
                 <i class="fas fa-star mr-1"></i> Destaque
             </span>
         @endif
-        <img src="/storage/products/{{ basename($produto->imagem) }}" alt="{{ $produto->nome }}" class="w-full h-full object-contain p-3"></div>
+        @if($produto->esgotado)
+            <span class="z-[5] absolute top-3 right-3 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
+                Esgotado
+            </span>
+        @elseif($ehAdmin && $produto->estoque_baixo)
+            <span class="z-[5] absolute top-3 right-3 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md" title="Estoque baixo">
+                <i class="fas fa-exclamation-triangle mr-1"></i> Restam {{ $produto->quantidade }}
+            </span>
+        @endif
+        <img src="/storage/products/{{ basename($produto->imagem) }}" alt="{{ $produto->nome }}" class="w-full h-full object-contain p-3 {{ $produto->esgotado ? 'grayscale opacity-40' : '' }}"></div>
 
     <div class="flex flex-col p-5 flex-grow">
         <div class="flex justify-between items-start mb-2">
@@ -35,7 +45,13 @@
             @endauth
         </div>
         <p class="text-gray-500 text-sm line-clamp-2 mb-2">{{ $produto->descrição }}</p>
-        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-auto">Estoque: {{ $produto->quantidade }}</p>
+        @if($produto->esgotado)
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mt-auto">Indisponível no momento</p>
+        @elseif($ehAdmin && $produto->estoque_baixo)
+            <p class="text-xs font-bold uppercase tracking-widest text-red-500 mt-auto">Estoque baixo: {{ $produto->quantidade }}</p>
+        @else
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-auto">Estoque: {{ $produto->quantidade }}</p>
+        @endif
     </div>
 
     <div class="bg-gray-50 px-5 py-4 border-t border-gray-100 flex justify-between items-center relative z-20">
@@ -56,6 +72,11 @@
                     <i class="far fa-heart text-red-500 text-xl"></i>
                 </a>
             @endauth
+            @if($produto->esgotado)
+                <span class="bg-gray-200 text-gray-400 w-10 h-10 rounded-full flex items-center justify-center cursor-not-allowed" title="Produto esgotado">
+                    <i class="fas fa-cart-plus text-sm"></i>
+                </span>
+            @else
             @auth
                 <form action="{{ route('carrinho.adicionar', $produto->id) }}" method="POST">
                     @csrf
@@ -68,6 +89,7 @@
                     <i class="fas fa-cart-plus text-sm"></i>
                 </a>
             @endauth
+            @endif
         </div>
     </div>
 </div>

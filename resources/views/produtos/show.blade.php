@@ -14,7 +14,7 @@
             <div class="md:w-1/2 p-10 bg-white flex flex-col items-center justify-center gap-6" x-data="{ atual: @js($galeria[0] ?? '') }">
                 <img src="{{ $galeria[0] ?? '' }}" :src="atual"
                      alt="{{ $produto->nome }}" 
-                     class="max-h-[450px] w-full object-contain hover:scale-105 transition-transform duration-500">
+                     class="max-h-[450px] w-full object-contain hover:scale-105 transition-transform duration-500 {{ $produto->esgotado ? 'grayscale opacity-50' : '' }}">
 
                 @if(count($galeria) > 1)
                     <div class="flex flex-wrap justify-center gap-3">
@@ -43,9 +43,20 @@
                     <span class="text-4xl font-black text-indigo-600">
                         R$ {{ number_format($produto->preço, 2, ',', '.') }}
                     </span>
-                    <p class="text-sm text-gray-400 mt-2 font-bold uppercase tracking-widest italic">
-                        Estoque disponível: {{ $produto->quantidade }} unidades
-                    </p>
+                    @php $ehAdmin = Auth::check() && strtolower(Auth::user()->role) === 'admin'; @endphp
+                    @if($produto->esgotado)
+                        <span class="inline-block mt-3 bg-gray-800 text-white text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full">
+                            Esgotado
+                        </span>
+                    @elseif($ehAdmin && $produto->estoque_baixo)
+                        <p class="mt-3 inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-xl">
+                            <i class="fas fa-exclamation-triangle"></i> Estoque baixo: restam {{ $produto->quantidade }} {{ $produto->quantidade === 1 ? 'unidade' : 'unidades' }}
+                        </p>
+                    @else
+                        <p class="text-sm text-gray-400 mt-2 font-bold uppercase tracking-widest italic">
+                            Estoque disponível: {{ $produto->quantidade }} unidades
+                        </p>
+                    @endif
                 </div>
 
                 <div class="flex-grow">
@@ -57,6 +68,12 @@
 
                 <div class="mt-10 flex gap-4">
                     @auth
+                        @if($produto->esgotado)
+                        <button type="button" disabled class="flex-grow bg-gray-200 text-gray-400 py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 cursor-not-allowed">
+                            <i class="fas fa-ban"></i>
+                            Produto esgotado
+                        </button>
+                        @else
                         <form action="{{ route('checkout.iniciar', $produto->id) }}" method="POST" class="flex-grow">
                             @csrf
                             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-all transform hover:scale-[1.02] shadow-xl flex items-center justify-center gap-3">
@@ -64,6 +81,7 @@
                                 Comprar Agora
                             </button>
                         </form>
+                        @endif
 
                         <form action="{{ route('produtos.favorito', $produto->id) }}" method="POST">
                             @csrf
@@ -72,10 +90,17 @@
                             </button>
                         </form>
                     @else
+                        @if($produto->esgotado)
+                        <button type="button" disabled class="flex-grow bg-gray-200 text-gray-400 py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 cursor-not-allowed">
+                            <i class="fas fa-ban"></i>
+                            Produto esgotado
+                        </button>
+                        @else
                         <a href="{{ route('login') }}" class="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-all transform hover:scale-[1.02] shadow-xl flex items-center justify-center gap-3">
                             <i class="fas fa-shopping-cart"></i>
                             Comprar Agora
                         </a>
+                        @endif
 
                         <a href="{{ route('login') }}" class="p-5 bg-white border border-gray-200 rounded-2xl text-red-500 hover:bg-red-50 transition-colors shadow-sm">
                             <i class="far fa-heart text-2xl"></i>

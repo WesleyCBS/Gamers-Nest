@@ -9,6 +9,8 @@ class Produto extends Model
 {
     protected $table = 'produto';
 
+    public const ESTOQUE_BAIXO = 5;
+
     protected $fillable = [
         'nome',
         'descrição',
@@ -31,6 +33,16 @@ class Produto extends Model
     public function categoria()
     {
         return $this->belongsTo(Categoria::class);
+    }
+
+    public function getEsgotadoAttribute(): bool
+    {
+        return $this->quantidade <= 0;
+    }
+
+    public function getEstoqueBaixoAttribute(): bool
+    {
+        return $this->quantidade > 0 && $this->quantidade <= self::ESTOQUE_BAIXO;
     }
 
     public function imagens()
